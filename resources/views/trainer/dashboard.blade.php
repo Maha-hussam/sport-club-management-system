@@ -7,7 +7,6 @@
             --text: #f5f7f2;
             --muted: #a5afa2;
             --border: #303a2e;
-
             min-height: calc(100vh - 80px);
             padding: 65px 0;
             background:
@@ -119,6 +118,60 @@
             overflow-wrap: anywhere;
         }
 
+        .player-management-card {
+            margin-top: 24px;
+            padding: 28px 32px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+        }
+
+        .player-management-title {
+            color: var(--text);
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .player-management-description {
+            margin-top: 8px;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .manage-players-button {
+            display: inline-block;
+            flex-shrink: 0;
+            padding: 12px 20px;
+            border-radius: 8px;
+            background: var(--green);
+            color: var(--dark);
+            font-size: 14px;
+            font-weight: bold;
+            transition: background 0.2s, transform 0.2s;
+        }
+
+        .manage-players-button:hover {
+            background: #c8ff70;
+            transform: translateY(-2px);
+        }
+
+        .manage-players-button:focus-visible {
+            outline: 2px solid var(--green);
+            outline-offset: 4px;
+        }
+
+        @media (max-width: 600px) {
+            .player-management-card {
+                align-items: flex-start;
+                flex-direction: column;
+                padding: 22px;
+            }
+        }
+
         @media (max-width: 600px) {
             .trainer-dashboard {
                 padding: 45px 0;
@@ -185,6 +238,24 @@
                         <p class="detail-value">{{ ucfirst($user->role) }}</p>
                     </div>
                 </div>
+
+            </section>
+
+            <section class="player-management-card" aria-label="Player management">
+
+                <div>
+                    <h2 class="player-management-title">
+                        Player Management
+                    </h2>
+
+                    <p class="player-management-description">
+                        View, add, edit, and manage registered players.
+                    </p>
+                </div>
+
+                <a href="{{ route('trainer.players.index') }}" class="manage-players-button">
+                    Manage Players →
+                </a>
 
             </section>
 
