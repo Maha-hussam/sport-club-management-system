@@ -2,19 +2,34 @@
 
 ## Overview
 
-The Sport Club Management System is a Laravel web application that supports user registration, login, and role-based dashboards for trainers and players.
+The Sport Club Management System is a Laravel web application that manages club users through role-based authentication, dashboards, and player management features.
+
+The application supports two roles: Trainer and Player. Trainers can manage player accounts, while players have access to their own dashboard.
 
 ### Features
-
+# Authentication and Authorization
 * Homepage with club information and navigation.
-* User registration and login.
-* User logout.
+* User registration, login , and logout.
 * Two user roles: Trainer and Player.
-* Role-based dashboard redirection.
-* Middleware-based dashboard authorization.
+* Role-based redirection after login.
+* Middleware-based access control.
 * Server-side validation.
 * Secure password hashing using Laravel.
 * MySQL database managed with Docker.
+
+# Player Management
+* View the list of registered players.
+* Add new player accounts.
+* Edit player information.
+* Change a player's password when needed.
+* Delete player accounts.
+* Validate submitted data using Laravel Form Requests.
+* Prevent duplicate email addresses.
+* Restrict player management routes to authenticated trainers.
+* Prevent trainers from managing accounts that do not have the Player role.
+* Use Laravel resource routing for player management.
+
+Player records use the existing users table and its role column. No separate players table is required.
 
 ## Technologies Used
 
@@ -136,17 +151,28 @@ http://localhost
 
 * Can register or log in as a Trainer.
 * Is redirected to the Trainer Dashboard.
-* Can view their name, email, and role.
-* Access to the Player Dashboard is restricted by role middleware.
+* Can view their account information.
+* Can access Player Management.
+* Can list, add, edit, and delete player accounts.
+* Cannot use Player Management to edit or delete Trainer accounts.
+* Cannot access Player-only dashboard routes.
 
 ### Player
 
 * Can register or log in as a Player.
 * Is redirected to the Player Dashboard.
-* Can view their name, email, and role.
-* Access to the Trainer Dashboard is restricted by role middleware.
+* Can view their account information.
+* Cannot access Trainer-only dashboard or Player Management routes.
 
-Unauthorized dashboard access returns a 403 Forbidden response.
+Unauthorized access is rejected by role middleware, returning a 403 Forbidden response for routes protected by the middleware. Attempts to manage a user who is not a player return 404 Not Found.
+
+### Validation and Password Security
+* Required fields are validated on the server.
+* Email addresses must be valid and unique.
+* Password confirmation is required when creating an account or changing a password.
+* Passwords are hashed by Laravel before storage.
+* The edit form allows the trainer to leave the password fields blank to retain the existing password.
+* The player role is assigned by the server when creating a player; it is not selected through the management form.
 
 ## Useful Commands
 
@@ -196,32 +222,45 @@ docker compose exec laravel.test npm run build
 
 The following screenshots demonstrate the main pages and role-based dashboards of the Sport Club Management System.
 
-1. Homepage
+# Homepage
 
 Homepage — Part 1
 
-!Homepage Part 1
-
 Homepage — Part 2
 
-!Homepage Part 2
+# Authentication
 
-2. Registration Page
+Registration Page
 
-!Registration Page
+Login Page
 
-3. Login Page
+# Dashboards
 
-!Login Page
+Trainer Dashboard
 
-4. Trainer Dashboard
+Player Dashboard
 
-!Trainer Dashboard
+# Player Management
 
-5. Player Dashboard
+Players List
 
-!Player Dashboard
+Add Player
+
+Edit Player
+
+Player Updated Successfully
+
+Player Deleted Successfully
+
 
 ## Project Status
 
-This is Phase 1 of the Sport Club Management System. It focuses on project setup, authentication, user roles, dashboards, validation, and authorization. Player management, match management, and other management features are planned for future phases.
+# Phase 1 — Sport Club Management System
+
+The project includes application setup, database configuration, authentication, user registration and login, role-based dashboards for Trainers and Players, input validation, and authorization.
+
+# Player Management — Implemented
+
+Trainers can view, add, edit, and delete player accounts. Only users with the Trainer role can access player management features, and Trainers cannot manage other Trainer accounts. The feature uses Laravel resource routing, Form Requests, and role-based access control.
+
+Future phases may include match management and assigning players to matches.
