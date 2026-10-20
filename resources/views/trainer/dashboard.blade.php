@@ -258,7 +258,23 @@
                 </a>
 
             </section>
+            <section class="player-management-card" aria-label="Match management">
 
+                <div>
+                    <h2 class="player-management-title">
+                        Match Management
+                    </h2>
+
+                    <p class="player-management-description">
+                        Create, edit, and manage matches and assigned players.
+                    </p>
+                </div>
+
+                <a href="{{ route('trainer.matches.index') }}" class="manage-players-button">
+                    Manage Matches →
+                </a>
+
+            </section>
         </div>
     </section>
 </x-app-layout>

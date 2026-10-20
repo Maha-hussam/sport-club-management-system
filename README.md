@@ -2,9 +2,9 @@
 
 ## Overview
 
-The Sport Club Management System is a Laravel web application that manages club users through role-based authentication, dashboards, and player management features.
+The Sport Club Management System is a Laravel web application that manages sports club users through role-based authentication, dashboards, player management, and match management features.
 
-The application supports two roles: Trainer and Player. Trainers can manage player accounts, while players have access to their own dashboard.
+The application supports two user roles: Trainer and Player. Trainers can manage player accounts, create and manage matches, and assign players to matches. Players can access their own dashboard.
 
 ### Features
 # Authentication and Authorization
@@ -31,6 +31,21 @@ The application supports two roles: Trainer and Player. Trainers can manage play
 
 Player records use the existing users table and its role column. No separate players table is required.
 
+# Match Management
+* View the list of matches.
+* Create new matches with a name, date, time, location, and optional description.
+* Edit existing match information.
+* View detailed information about a match.
+* Delete matches.
+* Assign one or more registered players to a match.
+* Update player assignments for existing matches.
+* Support multiple players per match and multiple matches per player.
+* Restrict match management operations to authenticated trainers.
+* Validate match information and player assignments before saving.
+* Use Laravel Eloquent relationships to manage player–match associations.
+
+Match management uses a dedicated matches table and a pivot table to associate matches with players. Player accounts continue to use the existing users table.
+
 ## Technologies Used
 
 * PHP
@@ -41,6 +56,8 @@ Player records use the existing users table and its role column. No separate pla
 * Laravel Sail
 * Blade
 * Tailwind CSS and Vite
+* Laravel Eloquent ORM
+* Laravel Form Requests
 
 ## Requirements
 
@@ -124,7 +141,7 @@ Check migration status:
 docker compose exec laravel.test php artisan migrate:status
 ```
 
-The migrations create the database tables required by the application.
+The migrations create the database tables required by the application, including the match management tables when their migrations are present.
 
 **Warning:** `migrate:fresh` drops existing tables and data. Use it only when you intentionally want to reset the database.
 
@@ -155,6 +172,9 @@ http://localhost
 * Can access Player Management.
 * Can list, add, edit, and delete player accounts.
 * Cannot use Player Management to edit or delete Trainer accounts.
+* Can view all matches.
+* Can create, edit, view, and delete matches.
+* Can assign players to matches and update player assignments.
 * Cannot access Player-only dashboard routes.
 
 ### Player
@@ -162,17 +182,72 @@ http://localhost
 * Can register or log in as a Player.
 * Is redirected to the Player Dashboard.
 * Can view their account information.
-* Cannot access Trainer-only dashboard or Player Management routes.
+* Cannot access Trainer-only dashboard, Player Management, or Match Management routes.
+* Match visibility and assigned-match features for players will be expanded in the Player Dashboard phase.
 
-Unauthorized access is rejected by role middleware, returning a 403 Forbidden response for routes protected by the middleware. Attempts to manage a user who is not a player return 404 Not Found.
+Unauthorized access to routes protected by role middleware is rejected with a 403 Forbidden response. Attempts to manage a user who is not a player return 404 Not Found.
 
 ### Validation and Password Security
+
+# Authentication and Player Management
 * Required fields are validated on the server.
 * Email addresses must be valid and unique.
 * Password confirmation is required when creating an account or changing a password.
 * Passwords are hashed by Laravel before storage.
 * The edit form allows the trainer to leave the password fields blank to retain the existing password.
 * The player role is assigned by the server when creating a player; it is not selected through the management form.
+
+# Match Management
+* Match names, dates, times, and locations must be provided.
+* The description is optional.
+* Match data must pass server-side validation before being saved.
+* Player assignments must reference valid existing player accounts.
+* Only users with the Player role can be assigned to matches.
+* Match creation, editing, deletion, and player assignment are restricted to authenticated trainers.
+* Authorization must be enforced on the server, not only by hiding interface elements.
+
+## Database Design
+# Users
+The existing users table stores both Trainers and Players. The role column distinguishes between the two roles.
+
+No separate players table is required.
+
+# Matches
+The matches table stores match information, including:
+
+* Match name.
+* Match date.
+* Match time.
+* Location.
+* Optional description.
+* Timestamps.
+
+# Match–Player Relationship
+A pivot table associates matches with users who have the Player role.
+
+The relationship is many-to-many:
+
+* A match can have multiple players.
+* A player can participate in multiple matches.
+
+Laravel Eloquent's belongsToMany relationship should be used on both the Match and User models to manage this association.
+
+The pivot table should include the appropriate foreign keys and constraints. Its name and column names must match the actual migrations and Eloquent relationship definitions.
+
+## Match Management Pages
+# Matches List
+Displays the registered matches and provides navigation to view match details, create a match, edit a match, or delete a match.
+
+# Create Match
+Allows trainers to enter the match name, date, time, location, and optional description.
+
+# Edit Match
+Allows trainers to update an existing match's information.
+
+## Match Details and Player Assignment
+Displays the match information and its assigned players. Trainers can assign additional players or update the existing assignments.
+
+Player assignment should use the many-to-many Eloquent relationship so that assignments can be managed without manually manipulating pivot-table records throughout the application.
 
 ## Useful Commands
 
@@ -222,25 +297,21 @@ docker compose exec laravel.test npm run build
 
 The following screenshots demonstrate the main pages and role-based dashboards of the Sport Club Management System.
 
-# Homepage
+1. Homepage and Authentication
 
-Homepage — Part 1
-
-Homepage — Part 2
-
-# Authentication
+Homepage
 
 Registration Page
 
 Login Page
 
-# Dashboards
+2. Role-Based Dashboards
 
 Trainer Dashboard
 
 Player Dashboard
 
-# Player Management
+3. Player Management
 
 Players List
 
@@ -252,6 +323,19 @@ Player Updated Successfully
 
 Player Deleted Successfully
 
+4. Match Management
+
+Matches List
+
+Create Match
+
+Edit Match
+
+Match Details and Player Assignment
+
+Match Created Successfully
+
+Player Assignment
 
 ## Project Status
 
