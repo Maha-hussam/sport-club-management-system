@@ -27,7 +27,7 @@ class AuthenticatedSessionController extends Controller
         }
 
         if ($request->user()->role === 'player') {
-            return redirect()->intended(route('player.dashboard'));
+            return redirect()->route('player.dashboard');
         }
         abort(403, 'Invalid user role.');
     }
