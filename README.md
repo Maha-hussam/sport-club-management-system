@@ -4,7 +4,7 @@
 
 The Sport Club Management System is a Laravel web application that manages sports club users through role-based authentication, dashboards, player management, and match management features.
 
-The application supports two user roles: Trainer and Player. Trainers can manage player accounts, create and manage matches, and assign players to matches. Players can access their own dashboard.
+The application supports two user roles: Trainer and Player. Trainers can manage player accounts, create and manage matches, and assign players to matches. Players can access their own dashboard, view their personal information, and browse matches assigned to them.
 
 ### Features
 # Authentication and Authorization
@@ -45,6 +45,19 @@ Player records use the existing users table and its role column. No separate pla
 * Use Laravel Eloquent relationships to manage player–match associations.
 
 Match management uses a dedicated matches table and a pivot table to associate matches with players. Player accounts continue to use the existing users table.
+
+# Player Dashboard
+* Redirect authenticated players to their Player Dashboard after login.
+* Display a welcome message, player profile information, the total number of assigned matches, and upcoming matches.
+* Allow players to view their personal information, including first name, last name, email, and registration date.
+* Keep the player profile read-only.
+* Display all matches assigned to the authenticated player.
+* Show match names, dates, times, locations, and descriptions.
+* Allow players to open assigned matches and view their details.
+* Retrieve player matches using Laravel Eloquent relationships.
+* Restrict player dashboard, profile, and match routes according to the authenticated user's role.
+* Prevent players from accessing matches that have not been assigned to them.
+* Prevent unauthorized access to other players' information through URL or request parameter manipulation.
 
 ## Technologies Used
 
@@ -147,7 +160,7 @@ The migrations create the database tables required by the application, including
 
 ### 7. Build Frontend Assets
 
- be rebuilt, run the commands supported by the project's Node.js and Vite setup.
+ If the frontend assets need to be rebuilt, run the commands supported by the project's Node.js and Vite setup.
 
 For example, when Node.js and npm are available inside the application container:
 
@@ -180,16 +193,22 @@ http://localhost
 ### Player
 
 * Can register or log in as a Player.
-* Is redirected to the Player Dashboard.
-* Can view their account information.
+* Is redirected to the Player Dashboard after login.
+* Can view a welcome message, personal information, the total number of assigned matches, and upcoming matches.
+* Can view their own profile, including first name, last name, email, and registration date.
+* Cannot edit personal information through the profile page.
+* Can view all matches assigned to their account.
+* Can view match names, dates, times, locations, and descriptions.
+* Can open match details only for matches assigned to them.
 * Cannot access Trainer-only dashboard, Player Management, or Match Management routes.
-* Match visibility and assigned-match features for players will be expanded in the Player Dashboard phase.
+* Cannot access another player's personal information or unassigned matches by modifying URLs or request parameters.
 
 Unauthorized access to routes protected by role middleware is rejected with a 403 Forbidden response. Attempts to manage a user who is not a player return 404 Not Found.
 
 ### Validation and Password Security
 
 # Authentication and Player Management
+
 * Required fields are validated on the server.
 * Email addresses must be valid and unique.
 * Password confirmation is required when creating an account or changing a password.
@@ -198,6 +217,7 @@ Unauthorized access to routes protected by role middleware is rejected with a 40
 * The player role is assigned by the server when creating a player; it is not selected through the management form.
 
 # Match Management
+
 * Match names, dates, times, and locations must be provided.
 * The description is optional.
 * Match data must pass server-side validation before being saved.
@@ -206,13 +226,76 @@ Unauthorized access to routes protected by role middleware is rejected with a 40
 * Match creation, editing, deletion, and player assignment are restricted to authenticated trainers.
 * Authorization must be enforced on the server, not only by hiding interface elements.
 
+# Player Dashboard
+
+1. Player Dashboard
+
+The Player Dashboard provides authenticated players with an overview of their account and assigned matches.
+
+The dashboard displays:
+
+* A welcome message for the logged-in player.
+* The player's profile information.
+* The total number of matches assigned to the player.
+* Upcoming matches assigned to the player.
+
+2. My Profile
+
+The My Profile page displays the authenticated player's personal information:
+
+* First Name
+* Last Name
+* Email
+* Registration Date
+
+The profile is read-only. Players cannot update their personal information through this page.
+
+3. My Matches
+
+The My Matches page displays all matches assigned to the authenticated player.
+
+Each match includes:
+
+* Match Name
+* Match Date
+* Match Time
+* Location
+* Description
+
+Player matches are retrieved using Laravel Eloquent relationships.
+
+4. Match Details
+
+Players can open an assigned match to view its details, including the match name, date, time, location, and description.
+
+Players must not be able to access matches that have not been assigned to their accounts.
+
+5. Authorization and Access Control
+* Player-specific routes are restricted to authenticated users with the Player role.
+* Trainers cannot access Player-specific pages.
+* Players can view only their own dashboard and profile.
+* Match queries are restricted to matches assigned to the authenticated player.
+* Server-side authorization prevents unauthorized access through modified URLs or request parameters.
+
+6. User Interface
+
+The Player Dashboard functionality includes the following pages:
+
+* Player Dashboard
+* My Profile
+* My Matches
+* Match Details
+
 ## Database Design
+
 # Users
+
 The existing users table stores both Trainers and Players. The role column distinguishes between the two roles.
 
 No separate players table is required.
 
 # Matches
+
 The matches table stores match information, including:
 
 * Match name.
@@ -223,6 +306,7 @@ The matches table stores match information, including:
 * Timestamps.
 
 # Match–Player Relationship
+
 A pivot table associates matches with users who have the Player role.
 
 The relationship is many-to-many:
@@ -235,16 +319,21 @@ Laravel Eloquent's belongsToMany relationship should be used on both the Match a
 The pivot table should include the appropriate foreign keys and constraints. Its name and column names must match the actual migrations and Eloquent relationship definitions.
 
 ## Match Management Pages
+
 # Matches List
+
 Displays the registered matches and provides navigation to view match details, create a match, edit a match, or delete a match.
 
 # Create Match
+
 Allows trainers to enter the match name, date, time, location, and optional description.
 
 # Edit Match
+
 Allows trainers to update an existing match's information.
 
 ## Match Details and Player Assignment
+
 Displays the match information and its assigned players. Trainers can assign additional players or update the existing assignments.
 
 Player assignment should use the many-to-many Eloquent relationship so that assignments can be managed without manually manipulating pivot-table records throughout the application.
@@ -347,4 +436,10 @@ The project includes application setup, database configuration, authentication, 
 
 Trainers can view, add, edit, and delete player accounts. Only users with the Trainer role can access player management features, and Trainers cannot manage other Trainer accounts. The feature uses Laravel resource routing, Form Requests, and role-based access control.
 
-Future phases may include match management and assigning players to matches.
+# Match Management — Implemented
+
+Trainers can create, view, edit, and delete matches. They can also assign players to matches and update player assignments using the many-to-many relationship between players and matches.
+
+# Player Dashboard — Implemented
+
+Players can access their dashboard, view their read-only profile, browse their assigned matches, and open match details. The dashboard displays the player's information, the total number of assigned matches, and upcoming matches. Player-specific routes and match access are restricted according to the authenticated user's role and match assignments.

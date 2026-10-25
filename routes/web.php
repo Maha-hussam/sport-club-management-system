@@ -35,6 +35,18 @@ Route::middleware(['auth', 'role:player'])->group(function () {
     Route::get('/player/dashboard', [PlayerDashboardController::class, 'index'])
         ->name('player.dashboard');
 
+    Route::get('/player/dashboard/profile', [PlayerDashboardController::class, 'profile'])
+        ->name('player.profile');
+
+    Route::get('/player/dashboard/matches', [PlayerDashboardController::class, 'matches'])
+        ->name('player.matches');
+
+    Route::get('/player/dashboard/matches/{matchId}', [
+        PlayerDashboardController::class,
+        'showMatch',
+    ])->whereNumber('matchId')->name('player.matches.show');
+
+
 });
 
 require __DIR__ . '/auth.php';
