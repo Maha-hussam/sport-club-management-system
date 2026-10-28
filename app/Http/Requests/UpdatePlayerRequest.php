@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 
 class UpdatePlayerRequest extends FormRequest
 {
@@ -14,22 +15,25 @@ class UpdatePlayerRequest extends FormRequest
 
     public function rules(): array
     {
-        $playerId = $this->route('player')?->id;
+        $playerId = $this->route('id');
 
         return [
             'first_name' => [
+                'sometimes',
                 'required',
                 'string',
                 'max:255',
             ],
 
             'last_name' => [
+                'sometimes',
                 'required',
                 'string',
                 'max:255',
             ],
 
             'email' => [
+                'sometimes',
                 'required',
                 'string',
                 'lowercase',
@@ -39,9 +43,10 @@ class UpdatePlayerRequest extends FormRequest
             ],
 
             'password' => [
-                'nullable',
+                'sometimes',
+                'required',
                 'confirmed',
-                'min:8',
+                Password::defaults(),
             ],
         ];
     }

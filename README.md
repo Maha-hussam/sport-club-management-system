@@ -443,3 +443,269 @@ Trainers can create, view, edit, and delete matches. They can also assign player
 # Player Dashboard — Implemented
 
 Players can access their dashboard, view their read-only profile, browse their assigned matches, and open match details. The dashboard displays the player's information, the total number of assigned matches, and upcoming matches. Player-specific routes and match access are restricted according to the authenticated user's role and match assignments.
+
+# Sport Club REST API
+
+## Overview
+
+The Sport Club REST API exposes player and match management functionality through JSON endpoints. It uses Laravel Sanctum for token-based authentication, Laravel API Resources for consistent JSON responses, and Laravel Form Requests for request validation.
+
+## 1. API Authentication
+
+The API uses Laravel Sanctum to authenticate requests using Bearer tokens.
+
+### Login
+
+**Endpoint:** `POST /api/login`
+
+Request body:
+
+```json
+{
+  "email": "trainer@example.com",
+  "password": "your-password"
+}
+```
+
+A successful login returns the authenticated user's information and an API token.
+
+Example response:
+
+```json
+{
+  "message": "Login successful.",
+  "user": {
+    "id": 1,
+    "first_name": "Example",
+    "last_name": "Trainer",
+    "email": "trainer@example.com",
+    "role": "trainer"
+  },
+  "token": "YOUR_API_TOKEN",
+  "token_type": "Bearer"
+}
+```
+
+Protected endpoints require this header:
+
+```http
+Authorization: Bearer YOUR_API_TOKEN
+Accept: application/json
+```
+
+### Authentication Endpoints
+
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/api/login` | Authenticate a user and issue a token |
+| POST | `/api/logout` | Revoke the current access token |
+| GET | `/api/user` | Return the authenticated user |
+
+## 2. Player APIs
+
+All player endpoints require authentication. Only Trainers can create, update, or delete players.
+
+| Method | Endpoint | Description | Permission |
+|---|---|---|---|
+| GET | `/api/players` | List players | Authenticated users |
+| GET | `/api/players/{id}` | Get player details | Authenticated users |
+| POST | `/api/players` | Create a player | Trainer only |
+| PUT | `/api/players/{id}` | Update a player | Trainer only |
+| PATCH | `/api/players/{id}` | Partially update a player | Trainer only |
+| DELETE | `/api/players/{id}` | Delete a player | Trainer only |
+
+### Create Player Example
+
+**Endpoint:** `POST /api/players`
+
+```json
+{
+  "first_name": "Alex",
+  "last_name": "Player",
+  "email": "alex.player@example.com",
+  "password": "ExamplePassword123!",
+  "password_confirmation": "ExamplePassword123!"
+}
+```
+
+A successful creation returns `201 Created`. Passwords are not included in player resource responses.
+
+## 3. Match APIs
+
+All match endpoints require authentication. Only Trainers can create, update, or delete matches.
+
+| Method | Endpoint | Description | Permission |
+|---|---|---|---|
+| GET | `/api/matches` | List matches | Authenticated users |
+| GET | `/api/matches/{id}` | Get match details | Authenticated users |
+| POST | `/api/matches` | Create a match | Trainer only |
+| PUT | `/api/matches/{id}` | Update a match | Trainer only |
+| PATCH | `/api/matches/{id}` | Partially update a match | Trainer only |
+| DELETE | `/api/matches/{id}` | Delete a match | Trainer only |
+
+### Create Match Example
+
+**Endpoint:** `POST /api/matches`
+
+```json
+{
+  "match_name": "Friendly Match",
+  "match_date": "2026-11-10",
+  "match_time": "15:30",
+  "location": "Main Stadium",
+  "description": "Friendly training match"
+}
+```
+
+The description is optional. A successful creation returns `201 Created`.
+
+### Update Match Example
+
+**Endpoint:** `PATCH /api/matches/{id}`
+
+```json
+{
+  "match_name": "Updated Friendly Match",
+  "location": "Training Stadium"
+}
+```
+
+Only the supplied fields are updated.
+
+## 4. Assign Players to Matches
+
+Trainers can assign one or more registered players to a match.
+
+**Endpoint:** `PUT /api/matches/{id}/players`
+
+Request body:
+
+```json
+{
+  "player_ids": [13, 18]
+}
+```
+
+The `player_ids` field must contain an array of existing user IDs belonging to users with the Player role.
+
+The endpoint validates the submitted IDs and updates the match's player assignments using the Eloquent many-to-many relationship.
+
+A successful response returns the match information and its assigned players.
+
+## 5. API Resources and Validation
+
+The API uses the following Laravel API Resources:
+
+- `PlayerResource`
+- `MatchResource`
+
+Form Requests validate incoming data:
+
+- `StorePlayerRequest`
+- `UpdatePlayerRequest`
+- `StoreMatchRequest`
+- `UpdateMatchRequest`
+- `AssignPlayersRequest`
+
+These requests validate required fields, email uniqueness, password confirmation, match details, and player assignments. Trainer-only operations are protected by authorization checks.
+
+## 6. HTTP Status Codes and Error Handling
+
+| Status | Description |
+|---|---|
+| `200 OK` | Request completed successfully |
+| `201 Created` | Resource created successfully |
+| `401 Unauthorized` | Authentication is missing or invalid |
+| `403 Forbidden` | The authenticated user does not have permission |
+| `404 Not Found` | The requested resource does not exist |
+| `422 Unprocessable Entity` | Request validation failed |
+
+### Example Validation Error
+
+A request that omits the required `match_name` field should return `422` with a JSON validation response similar to:
+
+```json
+{
+  "message": "The match name field is required.",
+  "errors": {
+    "match_name": [
+      "The match name field is required."
+    ]
+  }
+}
+```
+
+## 7. Testing the API with PowerShell
+
+Start the application:
+
+```powershell
+docker compose up -d
+```
+
+Log in with a Trainer account and store the returned token:
+
+```powershell
+$login = Invoke-RestMethod `
+  -Uri "http://localhost/api/login" `
+  -Method Post `
+  -ContentType "application/json" `
+  -Body (@{
+    email = "TRAINER_EMAIL"
+    password = "TRAINER_PASSWORD"
+  } | ConvertTo-Json)
+
+$token = $login.token
+```
+
+### Example: List Matches
+
+```powershell
+Invoke-RestMethod `
+  -Uri "http://localhost/api/matches" `
+  -Method Get `
+  -Headers @{ Authorization = "Bearer $token" }
+```
+
+### Example: Create a Match
+
+```powershell
+$body = @{
+  match_name = "Friendly Match"
+  match_date = "2026-11-10"
+  match_time = "15:30"
+  location = "Main Stadium"
+  description = "Friendly training match"
+} | ConvertTo-Json
+
+Invoke-RestMethod `
+  -Uri "http://localhost/api/matches" `
+  -Method Post `
+  -ContentType "application/json" `
+  -Headers @{ Authorization = "Bearer $token" } `
+  -Body $body
+```
+
+Use a Trainer token for write operations that require Trainer permissions. Test restricted operations with a separate Player account.
+
+Do not commit real passwords or access tokens to the repository.
+
+## 8. API Screenshots
+
+Add screenshots of actual API requests and responses to demonstrate the implemented functionality.
+
+Recommended screenshots:
+
+1. Successful login response, with the token obscured.
+2. `GET /api/players` response.
+3. Successful player creation or update.
+4. `GET /api/matches` response.
+5. Successful match creation or update.
+6. Successful player assignment showing the assigned player.
+7. `403 Forbidden` when a Player attempts a Trainer-only operation.
+8. `404 Not Found` for a nonexistent match.
+9. `422` validation error for a request with missing required data.
+
+Store the screenshots in the repository and update this section with their actual filenames or paths.
+
+---
