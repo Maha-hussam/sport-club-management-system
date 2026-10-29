@@ -18,7 +18,7 @@ class StoreMatchRequest extends FormRequest
             'match_date' => ['required', 'date'],
             'match_time' => ['required', 'date_format:H:i'],
             'location' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
+            'description' => ['nullable', 'string', 'max:2000'],
         ];
     }
 

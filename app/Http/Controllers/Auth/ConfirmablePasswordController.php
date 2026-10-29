@@ -28,7 +28,15 @@ class ConfirmablePasswordController extends Controller
                 'password' => __('auth.password'),
             ]);
         }
+
         $request->session()->put('auth.password_confirmed_at', time());
-        return redirect()->intended(route('dashboard', absolute: false));
+
+        $dashboardRoute = match ($request->user()->role) {
+            'trainer' => 'trainer.dashboard',
+            'player' => 'player.dashboard',
+            default => abort(403, 'Invalid user role.'),
+        };
+
+        return redirect()->intended(route($dashboardRoute, absolute: false));
     }
 }
