@@ -4,9 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\GameMatch;
 use App\Models\User;
-use Illuminate\Validation\Rule;
+use App\Http\Requests\StoreMatchRequest;
+use App\Http\Requests\UpdateMatchRequest;
 use Illuminate\Http\Request;
-
+use Illuminate\Validation\Rule;
 class MatchController extends Controller
 {
     public function index()
@@ -21,16 +22,9 @@ class MatchController extends Controller
         return view('trainer.matches.create');
     }
 
-    public function store(Request $request)
+    public function store(StoreMatchRequest $request)
     {
-        $validated = $request->validate([
-            'match_name' => ['required', 'string', 'max:255'],
-            'match_date' => ['required', 'date'],
-            'match_time' => ['required', 'date_format:H:i'],
-            'location' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string', 'max:2000'],
-        ]);
-
+        $validated = $request->validated();
         GameMatch::create($validated);
 
         return redirect()
@@ -80,18 +74,12 @@ class MatchController extends Controller
         ]);
     }
 
-    public function update(Request $request, GameMatch $gameMatch)
-    {
-        $validated = $request->validate([
-            'match_name' => ['required', 'string', 'max:255'],
-            'match_date' => ['required', 'date'],
-            'match_time' => ['required', 'date_format:H:i'],
-            'location' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string', 'max:2000'],
-        ]);
-
+    public function update(
+        UpdateMatchRequest $request,
+        GameMatch $gameMatch
+    ) {
+        $validated = $request->validated();
         $gameMatch->update($validated);
-
         return redirect()
             ->route('trainer.matches.index')
             ->with('success', 'Match updated successfully.');
@@ -100,7 +88,6 @@ class MatchController extends Controller
     public function destroy(GameMatch $gameMatch)
     {
         $gameMatch->delete();
-
         return redirect()
             ->route('trainer.matches.index')
             ->with('success', 'Match deleted successfully.');

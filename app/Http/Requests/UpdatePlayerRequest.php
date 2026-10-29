@@ -13,9 +13,18 @@ class UpdatePlayerRequest extends FormRequest
         return $this->user()?->role === 'trainer';
     }
 
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('email') && is_string($this->input('email'))) {
+            $this->merge([
+                'email' => strtolower($this->input('email')),
+            ]);
+        }
+    }
+
     public function rules(): array
     {
-        $playerId = $this->route('id');
+        $playerId = $this->route('player')?->id;
 
         return [
             'first_name' => [

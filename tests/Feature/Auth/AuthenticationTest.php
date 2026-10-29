@@ -5,22 +5,34 @@ use App\Models\User;
 test('login screen can be rendered', function () {
     $response = $this->get('/login');
 
-    $response->assertStatus(200);
+    $response->assertOk();
 });
 
-test('users can authenticate using the login screen', function () {
-    $user = User::factory()->create();
+test('trainers are redirected to the trainer dashboard after login', function () {
+    $user = User::factory()->trainer()->create();
 
     $response = $this->post('/login', [
         'email' => $user->email,
         'password' => 'password',
     ]);
 
-    $this->assertAuthenticated();
-    $response->assertRedirect(route('dashboard', absolute: false));
+    $response->assertRedirect(route('trainer.dashboard'));
+    $this->assertAuthenticatedAs($user);
 });
 
-test('users can not authenticate with invalid password', function () {
+test('players are redirected to the player dashboard after login', function () {
+    $user = User::factory()->player()->create();
+
+    $response = $this->post('/login', [
+        'email' => $user->email,
+        'password' => 'password',
+    ]);
+
+    $response->assertRedirect(route('player.dashboard'));
+    $this->assertAuthenticatedAs($user);
+});
+
+test('users cannot authenticate with an invalid password', function () {
     $user = User::factory()->create();
 
     $this->post('/login', [

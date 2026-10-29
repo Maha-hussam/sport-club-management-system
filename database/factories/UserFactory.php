@@ -8,24 +8,31 @@ use Illuminate\Support\Str;
 
 class UserFactory extends Factory
 {
-
-    protected static ?string $password;
+    protected static ?string $password = null;
 
     public function definition(): array
     {
         return [
-            'name' => fake()->name(),
+            'first_name' => fake()->firstName(),
+            'last_name' => fake()->lastName(),
             'email' => fake()->unique()->safeEmail(),
-            'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
+            'role' => 'player',
             'remember_token' => Str::random(10),
         ];
     }
 
-    public function unverified(): static
+    public function trainer(): static
     {
         return $this->state(fn(array $attributes) => [
-            'email_verified_at' => null,
+            'role' => 'trainer',
+        ]);
+    }
+
+    public function player(): static
+    {
+        return $this->state(fn(array $attributes) => [
+            'role' => 'player',
         ]);
     }
 }

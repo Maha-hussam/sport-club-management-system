@@ -11,6 +11,15 @@ class UpdateMatchRequest extends FormRequest
         return $this->user()?->role === 'trainer';
     }
 
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('match_name') && is_string($this->input('match_name'))) {
+            $this->merge([
+                'match_name' => trim($this->input('match_name')),
+            ]);
+        }
+    }
+
     public function rules(): array
     {
         return [
@@ -18,8 +27,7 @@ class UpdateMatchRequest extends FormRequest
             'match_date' => ['sometimes', 'required', 'date'],
             'match_time' => ['sometimes', 'required', 'date_format:H:i'],
             'location' => ['sometimes', 'required', 'string', 'max:255'],
-            'description' => ['sometimes', 'nullable', 'string'],
+            'description' => ['sometimes', 'nullable', 'string', 'max:2000'],
         ];
     }
-
 }
