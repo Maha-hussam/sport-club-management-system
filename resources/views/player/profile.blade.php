@@ -72,6 +72,18 @@
             font-weight: bold;
         }
 
+        .profile-avatar {
+            overflow: hidden;
+        }
+
+        .profile-avatar img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 12px;
+        }
+
         .profile-name {
             color: var(--text);
             font-size: 22px;
@@ -159,9 +171,60 @@
                 gap: 20px;
             }
 
-            .profile-avatar {
-                width: 52px;
-                height: 52px;
+            .profile-image-actions {
+                padding-top: 22px;
+                border-bottom: 1px solid var(--border);
+                padding-bottom: 22px;
+            }
+
+            .profile-image-actions h3 {
+                color: var(--text);
+                font-size: 16px;
+                font-weight: bold;
+                margin-bottom: 14px;
+            }
+
+            .profile-image-actions form {
+                margin-top: 12px;
+            }
+
+            .profile-image-actions input[type="file"] {
+                display: block;
+                width: 100%;
+                color: var(--muted);
+                margin-bottom: 12px;
+            }
+
+            .profile-image-actions button {
+                padding: 9px 15px;
+                border: 1px solid var(--green);
+                border-radius: 8px;
+                background: #293820;
+                color: var(--green);
+                font-weight: bold;
+                cursor: pointer;
+            }
+
+            .profile-image-actions button:hover {
+                background: #35472a;
+            }
+
+            .profile-image-actions .remove-image-button {
+                border-color: #a94444;
+                color: #ff8585;
+                background: transparent;
+            }
+
+            .image-success {
+                color: var(--green);
+                font-size: 13px;
+                margin-bottom: 10px;
+            }
+
+            .image-error {
+                color: #ff8585;
+                font-size: 13px;
+                margin-bottom: 10px;
             }
         }
     </style>
@@ -186,8 +249,14 @@
             <section class="profile-card" aria-label="My personal information">
 
                 <div class="profile-heading">
-                    <div class="profile-avatar" aria-hidden="true">
-                        {{ strtoupper(substr($player->first_name, 0, 1)) }}
+                    <div class="profile-avatar">
+                        @if ($player->profile_image)
+                            <img src="{{ asset('storage/' . $player->profile_image) }}" alt="Profile picture">
+                        @else
+                            <span aria-hidden="true">
+                                {{ strtoupper(substr($player->first_name, 0, 1)) }}
+                            </span>
+                        @endif
                     </div>
 
                     <div>
@@ -198,6 +267,45 @@
 
                         <span class="profile-role">PLAYER</span>
                     </div>
+                </div>
+
+                <div class="profile-image-actions">
+
+                    <h3>Profile Picture</h3>
+
+                    @if (session('success'))
+                        <p class="image-success">{{ session('success') }}</p>
+                    @endif
+
+                    @if ($errors->has('profile_image'))
+                        <p class="image-error">
+                            {{ $errors->first('profile_image') }}
+                        </p>
+                    @endif
+
+                    <form action="{{ route('player.profile.image.store') }}" method="POST"
+                        enctype="multipart/form-data">
+                        @csrf
+
+                        <input type="file" name="profile_image" accept=".jpg,.jpeg,.png" required>
+
+                        <button type="submit">
+                            Upload / Change Picture
+                        </button>
+                    </form>
+
+                    @if ($player->profile_image)
+                        <form action="{{ route('player.profile.image.destroy') }}" method="POST"
+                            onsubmit="return confirm('Are you sure you want to remove your profile picture?')">
+                            @csrf
+                            @method('DELETE')
+
+                            <button type="submit" class="remove-image-button">
+                                Remove Picture
+                            </button>
+                        </form>
+                    @endif
+
                 </div>
 
                 <div class="profile-fields">

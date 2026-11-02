@@ -59,6 +59,19 @@ Match management uses a dedicated matches table and a pivot table to associate m
 * Prevent players from accessing matches that have not been assigned to them.
 * Prevent unauthorized access to other players' information through URL or request parameter manipulation.
 
+# Player Profile Images
+
+* Allow players to upload their profile pictures.
+* Allow players to replace or remove their existing profile pictures.
+* Accept JPG, JPEG, and PNG image formats only.
+* Limit uploaded image size to 2 MB.
+* Display profile pictures on the Player Dashboard and My Profile pages.
+* Display player profile pictures in the Trainer's Player Management list.
+* Show a default avatar with the player's first initial when no profile picture exists.
+* Store images using Laravel's public storage disk.
+* Delete the previous image when a player uploads a replacement.
+* Automatically delete the profile image when the player account is deleted.
+
 ## Technologies Used
 
 * PHP
@@ -158,6 +171,12 @@ The migrations create the database tables required by the application, including
 
 **Warning:** `migrate:fresh` drops existing tables and data. Use it only when you intentionally want to reset the database.
 
+Create the public storage symbolic link so uploaded profile images can be accessed by the application:
+
+```bash
+docker compose exec laravel.test php artisan storage:link
+```
+
 ### 7. Build Frontend Assets
 
  If the frontend assets need to be rebuilt, run the commands supported by the project's Node.js and Vite setup.
@@ -197,6 +216,9 @@ http://localhost
 * Can view a welcome message, personal information, the total number of assigned matches, and upcoming matches.
 * Can view their own profile, including first name, last name, email, and registration date.
 * Cannot edit personal information through the profile page.
+* Can upload, replace, and remove their profile picture through the My Profile page.
+* Can view their profile picture on the Player Dashboard and My Profile page.
+* Can see a default avatar with their first initial when no profile picture is uploaded.
 * Can view all matches assigned to their account.
 * Can view match names, dates, times, locations, and descriptions.
 * Can open match details only for matches assigned to them.
@@ -293,6 +315,8 @@ The Player Dashboard functionality includes the following pages:
 The existing users table stores both Trainers and Players. The role column distinguishes between the two roles.
 
 No separate players table is required.
+
+The users table also includes a nullable `profile_image` column to store the path of each player's profile picture. The actual image files are stored on Laravel's public storage disk.
 
 # Matches
 
@@ -426,6 +450,20 @@ Match Created Successfully
 
 Player Assignment
 
+5. Player Profile Images
+
+Player Profile Image Upload
+
+Player Profile Image Replacement
+
+Player Profile Image Removal
+
+Default Player Avatar
+
+Player Profile Image on Dashboard
+
+Player Profile Image in Trainer's Player Management List
+
 ## Project Status
 
 # Phase 1 — Sport Club Management System
@@ -443,6 +481,9 @@ Trainers can create, view, edit, and delete matches. They can also assign player
 # Player Dashboard — Implemented
 
 Players can access their dashboard, view their read-only profile, browse their assigned matches, and open match details. The dashboard displays the player's information, the total number of assigned matches, and upcoming matches. Player-specific routes and match access are restricted according to the authenticated user's role and match assignments.
+
+# Player Profile Images — Implemented
+Players can upload, replace, and remove their profile pictures. The application validates image formats and file size, displays profile images across the relevant pages, and automatically deletes old images when replaced or when a player account is deleted.
 
 # Sport Club REST API
 

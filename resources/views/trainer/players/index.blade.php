@@ -50,7 +50,14 @@
                                     <td>
                                         <div class="player-cell">
                                             <div class="player-avatar">
-                                                {{ strtoupper(substr($player->first_name, 0, 1)) }}
+                                                @if ($player->profile_image)
+                                                    <img src="{{ asset('storage/' . $player->profile_image) }}"
+                                                        alt="{{ $player->first_name }} profile picture">
+                                                @else
+                                                    <span>
+                                                        {{ strtoupper(substr($player->first_name, 0, 1)) }}
+                                                    </span>
+                                                @endif
                                             </div>
                                             <div class="player-name">
                                                 <span>{{ $player->first_name }} {{ $player->last_name }}</span>
@@ -307,6 +314,18 @@
             background: #293623;
             color: var(--lime);
             font-weight: 700;
+        }
+
+        .player-avatar {
+            overflow: hidden;
+        }
+
+        .player-avatar img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 12px;
         }
 
         .player-name {

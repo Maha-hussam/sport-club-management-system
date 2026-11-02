@@ -6,6 +6,7 @@ use App\Http\Controllers\TrainerDashboardController;
 use App\Http\Controllers\PlayerDashboardController;
 use App\Http\Controllers\MatchController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\PlayerProfileImageController;
 
 Route::get('/', [HomeController::class, 'index'])
     ->name('home');
@@ -46,6 +47,11 @@ Route::middleware(['auth', 'role:player'])->group(function () {
         'showMatch',
     ])->whereNumber('matchId')->name('player.matches.show');
 
+    Route::post('/player/dashboard/profile/image', [PlayerProfileImageController::class, 'store'])
+        ->name('player.profile.image.store');
+
+    Route::delete('/player/dashboard/profile/image', [PlayerProfileImageController::class, 'destroy'])
+        ->name('player.profile.image.destroy');
 
 });
 
