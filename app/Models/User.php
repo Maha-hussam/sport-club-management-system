@@ -6,10 +6,18 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-#[Fillable(['first_name', 'last_name', 'email', 'password', 'role'])]
+#[Fillable([
+    'first_name',
+    'last_name',
+    'email',
+    'password',
+    'role',
+    'profile_image',
+])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -31,5 +39,14 @@ class User extends Authenticatable
             'player_id',
             'match_id'
         );
+    }
+
+    protected static function booted(): void
+    {
+        static::deleting(function (User $user) {
+            if ($user->role === 'player' && $user->profile_image) {
+                Storage::disk('public')->delete($user->profile_image);
+            }
+        });
     }
 }

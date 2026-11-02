@@ -15,7 +15,14 @@
 
             <div class="form-intro">
                 <div class="form-avatar">
-                    {{ strtoupper(substr($player->first_name, 0, 1)) }}
+                    @if ($player->profile_image)
+                        <img src="{{ asset('storage/' . $player->profile_image) }}"
+                            alt="{{ $player->first_name }} profile picture">
+                    @else
+                        <span>
+                            {{ strtoupper(substr($player->first_name, 0, 1)) }}
+                        </span>
+                    @endif
                 </div>
 
                 <div>
@@ -147,9 +154,6 @@
             font-weight: 700;
         }
 
-
-
-
         .back-link {
             display: inline-flex;
             align-items: center;
@@ -200,6 +204,18 @@
             color: var(--lime);
             font-size: 22px;
             font-weight: 700;
+        }
+
+        .form-avatar {
+            overflow: hidden;
+        }
+
+        .form-avatar img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 15px;
         }
 
         .form-section-title {

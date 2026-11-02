@@ -80,6 +80,18 @@
             font-weight: bold;
         }
 
+        .player-avatar {
+            overflow: hidden;
+        }
+
+        .player-avatar img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 12px;
+        }
+
         .player-name {
             color: var(--text);
             font-size: 22px;
@@ -209,11 +221,6 @@
                 grid-template-columns: 1fr;
                 gap: 18px;
             }
-
-            .player-avatar {
-                width: 52px;
-                height: 52px;
-            }
         }
     </style>
 
@@ -237,8 +244,14 @@
             <section class="player-card" aria-label="Player welcome">
 
                 <div class="player-card-heading">
-                    <div class="player-avatar" aria-hidden="true">
-                        {{ strtoupper(substr($player->first_name, 0, 1)) }}
+                    <div class="player-avatar">
+                        @if ($player->profile_image)
+                            <img src="{{ asset('storage/' . $player->profile_image) }}" alt="Profile picture">
+                        @else
+                            <span aria-hidden="true">
+                                {{ strtoupper(substr($player->first_name, 0, 1)) }}
+                            </span>
+                        @endif
                     </div>
 
                     <div style="flex: 1; min-width: 0;">
