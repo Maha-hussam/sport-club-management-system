@@ -9,7 +9,7 @@ class StorePlayerRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->role === 'trainer';
+        return true;
     }
 
     public function rules(): array

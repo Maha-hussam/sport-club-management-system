@@ -49,9 +49,9 @@ class MatchController extends Controller
     ) {
         $match = GameMatch::findOrFail($id);
 
-        $match->players()->sync(
-            $request->validated()['player_ids']
-        );
+        $playerIds = $request->validated()['player_ids'] ?? [];
+
+        $match->players()->sync($playerIds);
 
         return new MatchResource(
             $match->fresh()->load('players')
@@ -60,8 +60,6 @@ class MatchController extends Controller
 
     public function destroy(string $id): JsonResponse
     {
-        abort_unless(request()->user()?->role === 'trainer', 403);
-
         $match = GameMatch::findOrFail($id);
 
         $match->players()->detach();

@@ -10,7 +10,7 @@ class UpdatePlayerRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->role === 'trainer';
+        return true;
     }
 
     protected function prepareForValidation(): void
@@ -24,7 +24,11 @@ class UpdatePlayerRequest extends FormRequest
 
     public function rules(): array
     {
-        $playerId = $this->route('player')?->id;
+        $routePlayer = $this->route('player') ?? $this->route('id');
+
+        $playerId = $routePlayer instanceof \App\Models\User
+            ? $routePlayer->id
+            : $routePlayer;
 
         return [
             'first_name' => [
@@ -53,7 +57,7 @@ class UpdatePlayerRequest extends FormRequest
 
             'password' => [
                 'sometimes',
-                'required',
+                'nullable',
                 'confirmed',
                 Password::defaults(),
             ],

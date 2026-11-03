@@ -51,8 +51,6 @@ class PlayerController extends Controller
 
     public function destroy(string $id): JsonResponse
     {
-        abort_unless(request()->user()?->role === 'trainer', 403);
-
         $player = User::where('role', 'player')->findOrFail($id);
 
         $player->delete();
