@@ -43,3 +43,33 @@ test('trainer cannot delete another trainer through player routes', function () 
         'role' => 'trainer',
     ]);
 });
+
+test('trainer can update a player without changing the password', function () {
+    $trainer = User::factory()->trainer()->create();
+
+    $player = User::factory()->player()->create([
+        'first_name' => 'Old',
+        'last_name' => 'Player',
+        'email' => 'old.player@example.com',
+        'password' => 'OldPassword123!',
+    ]);
+
+    $originalPassword = $player->password;
+
+    $this->actingAs($trainer)
+        ->put("/trainer/dashboard/players/{$player->id}", [
+            'first_name' => 'Updated',
+            'last_name' => 'Player',
+            'email' => 'updated.player@example.com',
+            'password' => '',
+            'password_confirmation' => '',
+        ])
+        ->assertRedirect(route('trainer.players.index'))
+        ->assertSessionHas('success', 'Player updated successfully.');
+
+    $player->refresh();
+
+    expect($player->first_name)->toBe('Updated')
+        ->and($player->email)->toBe('updated.player@example.com')
+        ->and($player->password)->toBe($originalPassword);
+});

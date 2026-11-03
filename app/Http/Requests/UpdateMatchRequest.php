@@ -8,7 +8,7 @@ class UpdateMatchRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->role === 'trainer';
+        return true;
     }
 
     protected function prepareForValidation(): void

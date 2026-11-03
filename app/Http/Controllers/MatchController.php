@@ -6,8 +6,7 @@ use App\Models\GameMatch;
 use App\Models\User;
 use App\Http\Requests\StoreMatchRequest;
 use App\Http\Requests\UpdateMatchRequest;
-use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
+use App\Http\Requests\AssignPlayersRequest;
 class MatchController extends Controller
 {
     public function index()
@@ -45,21 +44,13 @@ class MatchController extends Controller
             'players' => $players,
         ]);
     }
-    public function updatePlayers(Request $request, GameMatch $gameMatch)
-    {
-        $validated = $request->validate([
-            'players' => ['sometimes', 'array'],
-            'players.*' => [
-                'required',
-                'integer',
-                'distinct',
-                Rule::exists('users', 'id')
-                    ->where('role', 'player'),
-            ],
-        ]);
+    public function updatePlayers(
+        AssignPlayersRequest $request,
+        GameMatch $gameMatch
+    ) {
+        $validated = $request->validated();
 
         $playerIds = $validated['players'] ?? [];
-
         $gameMatch->players()->sync($playerIds);
 
         return redirect()

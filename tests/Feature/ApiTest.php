@@ -71,3 +71,126 @@ test('player cannot delete a match through the API', function () {
     $this->deleteJson("/api/matches/{$match->id}")
         ->assertForbidden();
 });
+
+
+test('player cannot view all players through the API', function () {
+    $player = User::factory()->player()->create();
+
+    Sanctum::actingAs($player);
+
+    $this->getJson('/api/players')
+        ->assertForbidden();
+});
+
+test('player cannot view another player details through the API', function () {
+    $player = User::factory()->player()->create();
+
+    $anotherPlayer = User::factory()->player()->create();
+
+    Sanctum::actingAs($player);
+
+    $this->getJson("/api/players/{$anotherPlayer->id}")
+        ->assertForbidden();
+});
+
+test('player cannot view all matches through the API', function () {
+    $player = User::factory()->player()->create();
+
+    Sanctum::actingAs($player);
+
+    $this->getJson('/api/matches')
+        ->assertForbidden();
+});
+
+test('player cannot view match details through the API', function () {
+    $player = User::factory()->player()->create();
+
+    $match = GameMatch::create([
+        'match_name' => 'Protected Match',
+        'match_date' => '2026-11-10',
+        'match_time' => '15:30',
+        'location' => 'Main Stadium',
+        'description' => 'Protected description',
+    ]);
+
+    Sanctum::actingAs($player);
+
+    $this->getJson("/api/matches/{$match->id}")
+        ->assertForbidden();
+});
+
+test('trainer can view all players through the API', function () {
+    $trainer = User::factory()->trainer()->create();
+
+    User::factory()->player()->create();
+
+    Sanctum::actingAs($trainer);
+
+    $this->getJson('/api/players')
+        ->assertOk();
+});
+
+test('trainer can view player details through the API', function () {
+    $trainer = User::factory()->trainer()->create();
+
+    $player = User::factory()->player()->create();
+
+    Sanctum::actingAs($trainer);
+
+    $this->getJson("/api/players/{$player->id}")
+        ->assertOk();
+});
+
+test('trainer can view match details through the API', function () {
+    $trainer = User::factory()->trainer()->create();
+
+    $match = GameMatch::create([
+        'match_name' => 'Trainer Match',
+        'match_date' => '2026-11-10',
+        'match_time' => '15:30',
+        'location' => 'Main Stadium',
+        'description' => 'Trainer match description',
+    ]);
+
+    Sanctum::actingAs($trainer);
+
+    $this->getJson("/api/matches/{$match->id}")
+        ->assertOk();
+});
+
+
+test('API login is rate limited after five attempts', function () {
+    $credentials = [
+        'email' => 'nonexistent@example.com',
+        'password' => 'WrongPassword123!',
+    ];
+
+    for ($i = 0; $i < 5; $i++) {
+        $this->postJson('/api/login', $credentials)
+            ->assertUnauthorized();
+    }
+
+    $this->postJson('/api/login', $credentials)
+        ->assertStatus(429);
+});
+
+
+test('trainer can update a player using the same email through the API', function () {
+    $trainer = User::factory()->trainer()->create();
+
+    $player = User::factory()->player()->create();
+
+    $originalEmail = $player->email;
+
+    Sanctum::actingAs($trainer);
+
+    $this->putJson("/api/players/{$player->id}", [
+        'first_name' => 'Updated',
+        'email' => $originalEmail,
+    ])
+        ->assertOk()
+        ->assertJsonPath('data.email', $originalEmail);
+
+    expect($player->fresh()->first_name)->toBe('Updated')
+        ->and($player->fresh()->email)->toBe($originalEmail);
+});
