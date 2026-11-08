@@ -32,6 +32,74 @@
                 </a>
             </div>
 
+            <div class="filters-card">
+                <form method="GET" action="{{ route('trainer.players.index') }}">
+                    <div class="filters-grid">
+
+                        <div class="filter-group search-group">
+                            <label for="search">Search Players</label>
+                            <input type="text" id="search" name="search" value="{{ $filters['search'] ?? '' }}"
+                                placeholder="Search by name or email...">
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="registered_from">Registered From</label>
+                            <input type="date" id="registered_from" name="registered_from"
+                                value="{{ $filters['registered_from'] ?? '' }}">
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="registered_to">Registered To</label>
+                            <input type="date" id="registered_to" name="registered_to"
+                                value="{{ $filters['registered_to'] ?? '' }}">
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="matches_count">Assigned Matches</label>
+                            <input type="number" id="matches_count" name="matches_count" min="0"
+                                value="{{ $filters['matches_count'] ?? '' }}" placeholder="Any number">
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="sort_by">Sort By</label>
+                            <select id="sort_by" name="sort_by">
+                                <option value="created_at" {{ ($filters['sort_by'] ?? 'created_at') === 'created_at' ? 'selected' : '' }}>
+                                    Registration Date
+                                </option>
+
+                                <option value="first_name" {{ ($filters['sort_by'] ?? 'created_at') === 'first_name' ? 'selected' : '' }}>
+                                    First Name
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="sort_direction">Sort Direction</label>
+                            <select id="sort_direction" name="sort_direction">
+                                <option value="desc" {{ ($filters['sort_direction'] ?? 'desc') === 'desc' ? 'selected' : '' }}>
+                                    Descending
+                                </option>
+
+                                <option value="asc" {{ ($filters['sort_direction'] ?? 'desc') === 'asc' ? 'selected' : '' }}>
+                                    Ascending
+                                </option>
+                            </select>
+                        </div>
+
+                    </div>
+
+                    <div class="filter-actions">
+                        <button type="submit" class="filter-button">
+                            Search & Filter
+                        </button>
+
+                        <a href="{{ route('trainer.players.index') }}" class="clear-button">
+                            Clear Filters
+                        </a>
+                    </div>
+                </form>
+            </div>
+
             <div class="players-card">
                 <div class="table-wrapper">
                     <table class="players-table">
@@ -39,6 +107,7 @@
                             <tr>
                                 <th>Player</th>
                                 <th>Email Address</th>
+                                <th>Matches</th>
                                 <th>Joined Date</th>
                                 <th>Actions</th>
                             </tr>
@@ -65,10 +134,9 @@
                                             </div>
                                         </div>
                                     </td>
-
                                     <td class="email-cell">{{ $player->email }}</td>
+                                    <td>{{ $player->matches_count }}</td>
                                     <td class="date-cell">{{ $player->created_at->format('Y-m-d') }}</td>
-
                                     <td>
                                         <div class="action-buttons">
                                             <a href="{{ route('trainer.players.edit', $player) }}"
@@ -85,14 +153,27 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4">
+                                    <td colspan="5">
                                         <div class="empty-state">
                                             <div class="empty-icon">◎</div>
-                                            <h4>No players yet</h4>
-                                            <p>Add your first player to build your club roster.</p>
-                                            <a href="{{ route('trainer.players.create') }}" class="primary-button">
-                                                Add First Player
-                                            </a>
+                                            @if (
+                                                    !empty($filters['search']) ||
+                                                    !empty($filters['registered_from']) ||
+                                                    !empty($filters['registered_to']) ||
+                                                    isset($filters['matches_count'])
+                                                )
+                                                <h4>No players found</h4>
+                                                <p>Try adjusting your search or filters.</p>
+                                                <a href="{{ route('trainer.players.index') }}" class="primary-button">
+                                                    Clear Filters
+                                                </a>
+                                            @else
+                                                <h4>No players yet</h4>
+                                                <p>Add your first player to build your club roster.</p>
+                                                <a href="{{ route('trainer.players.create') }}" class="primary-button">
+                                                    Add First Player
+                                                </a>
+                                            @endif
                                         </div>
                                     </td>
                                 </tr>
@@ -101,9 +182,53 @@
                     </table>
                 </div>
 
-                @if ($players->hasPages())
-                    <div class="pagination-wrapper">{{ $players->links() }}</div>
-                @endif
+                <div class="pagination-wrapper">
+                    <div class="pagination-info">
+                        <div class="pagination-count">
+                            Showing
+                            <strong>{{ $players->firstItem() ?? 0 }}–{{ $players->lastItem() ?? 0 }}</strong>
+                            of
+                            <strong>{{ $players->total() }}</strong>
+                            players
+                        </div>
+
+                        <div class="pagination-page">
+                            Page {{ $players->currentPage() }}
+                            of {{ $players->lastPage() }}
+                        </div>
+                    </div>
+
+                    <div class="pagination-links">
+                        @if ($players->hasPages())
+
+                            @if ($players->onFirstPage())
+                                <span class="page-btn disabled">‹</span>
+                            @else
+                                <a href="{{ $players->previousPageUrl() }}" class="page-btn">
+                                    ‹
+                                </a>
+                            @endif
+
+                            @foreach ($players->getUrlRange(1, $players->lastPage()) as $page => $url)
+                                @if ($page == $players->currentPage())
+                                    <span class="page-btn active">{{ $page }}</span>
+                                @else
+                                    <a href="{{ $url }}" class="page-btn">{{ $page }}</a>
+                                @endif
+                            @endforeach
+
+                            @if ($players->hasMorePages())
+                                <a href="{{ $players->nextPageUrl() }}" class="page-btn">
+                                    ›
+                                </a>
+                            @else
+                                <span class="page-btn disabled">›</span>
+                            @endif
+
+                        @endif
+                    </div>
+
+                </div>
             </div>
 
             <p class="page-footer">SPORT CLUB <span>•</span> PLAYER MANAGEMENT</p>
@@ -122,6 +247,20 @@
             padding: 36px 24px;
             background: var(--dark);
             color: var(--text);
+        }
+
+        .pagination-info {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 15px;
+            color: var(--muted);
+            font-size: 13px;
+            flex-wrap: wrap;
+        }
+
+        .pagination-info p {
+            margin: 0;
         }
 
         .page-heading,
@@ -252,6 +391,110 @@
 
         .button-icon {
             font-size: 20px;
+        }
+
+        .filters-card {
+            margin-bottom: 22px;
+            padding: 22px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: var(--card);
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .filter-group label {
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .filter-group input,
+        .filter-group select {
+            width: 100%;
+            min-height: 42px;
+            padding: 9px 11px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: #202920;
+            color: var(--text);
+            font-size: 13px;
+            color-scheme: dark;
+        }
+
+        .filter-group input:focus,
+        .filter-group select:focus {
+            outline: 2px solid var(--lime);
+            outline-offset: 2px;
+        }
+
+        .filter-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .filter-button,
+        .clear-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 40px;
+            padding: 9px 17px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .filter-button {
+            border: 1px solid var(--lime);
+            background: var(--lime);
+            color: var(--dark);
+        }
+
+        .filter-button:hover {
+            background: #c8ff69;
+        }
+
+        .clear-button {
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text);
+        }
+
+        .clear-button:hover {
+            border-color: var(--lime);
+            color: var(--lime);
+        }
+
+        @media (max-width: 768px) {
+            .filters-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 480px) {
+            .filters-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-actions {
+                align-items: stretch;
+                flex-direction: column;
+            }
         }
 
         .players-card {
@@ -431,19 +674,92 @@
         }
 
         .pagination-wrapper {
-            padding: 18px 20px;
-            border-top: 1px solid var(--border);
-        }
-
-        .pagination-wrapper nav {
             display: flex;
+            align-items: center;
             justify-content: space-between;
-            gap: 12px;
+            gap: 20px;
+            padding: 20px 24px;
+            border-top: 1px solid var(--border);
+            background: var(--card);
         }
 
-        .pagination-wrapper a,
-        .pagination-wrapper span {
+        .pagination-info {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .pagination-count {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .pagination-count strong {
             color: var(--text);
+            font-weight: 700;
+        }
+
+        .pagination-page {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .pagination-links {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .page-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 36px;
+            height: 36px;
+            padding: 0 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--card);
+            color: var(--text);
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .page-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: var(--hover);
+        }
+
+        .page-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #fff;
+        }
+
+        .page-btn.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        @media (max-width: 600px) {
+            .pagination-wrapper {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 16px;
+                padding: 18px;
+            }
+
+            .pagination-info {
+                width: 100%;
+            }
+
+            .pagination-links {
+                width: 100%;
+                overflow-x: auto;
+            }
         }
 
         .page-footer {
