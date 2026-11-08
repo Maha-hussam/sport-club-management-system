@@ -7,16 +7,60 @@ use App\Http\Requests\UpdatePlayerRequest;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
+use Illuminate\Http\Request;
 
 class PlayerController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
-        $players = User::where('role', 'player')
-            ->latest()
-            ->paginate(10);
+        $filters = $request->validate([
+            'search' => ['nullable', 'string', 'max:255'],
+            'registered_from' => ['nullable', 'date'],
+            'registered_to' => [
+                'nullable',
+                'date',
+                'after_or_equal:registered_from',
+            ],
+            'matches_count' => ['nullable', 'integer', 'min:0'],
+            'sort_by' => ['nullable', 'in:first_name,created_at'],
+            'sort_direction' => ['nullable', 'in:asc,desc'],
+        ]);
 
-        return view('trainer.players.index', compact('players'));
+        $query = User::where('role', 'player')
+            ->withCount('matches');
+
+        if (!empty($filters['search'])) {
+            $search = $filters['search'];
+
+            $query->where(function ($q) use ($search) {
+                $q->where('first_name', 'like', "%{$search}%")
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        if (!empty($filters['registered_from'])) {
+            $query->whereDate('created_at', '>=', $filters['registered_from']);
+        }
+
+        if (!empty($filters['registered_to'])) {
+            $query->whereDate('created_at', '<=', $filters['registered_to']);
+        }
+
+        if (isset($filters['matches_count'])) {
+            $query->has('matches', '=', (int) $filters['matches_count']);
+        }
+
+        $sortBy = $filters['sort_by'] ?? 'created_at';
+        $sortDirection = $filters['sort_direction'] ?? 'desc';
+
+        $players = $query
+            ->orderBy($sortBy, $sortDirection)
+            ->orderBy('id')
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('trainer.players.index', compact('players', 'filters'));
     }
 
     public function create(): View

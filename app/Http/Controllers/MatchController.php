@@ -7,13 +7,49 @@ use App\Models\User;
 use App\Http\Requests\StoreMatchRequest;
 use App\Http\Requests\UpdateMatchRequest;
 use App\Http\Requests\AssignPlayersRequest;
+use Illuminate\Http\Request;
+use Illuminate\View\View;
 class MatchController extends Controller
 {
-    public function index()
+    public function index(Request $request): View
     {
-        $matches = GameMatch::latest('match_date')->paginate(10);
+        $filters = $request->validate([
+            'search' => ['nullable', 'string', 'max:255'],
+            'match_date' => ['nullable', 'date'],
+            'location' => ['nullable', 'string', 'max:255'],
+            'sort_by' => ['nullable', 'in:match_name,match_date'],
+            'sort_direction' => ['nullable', 'in:asc,desc'],
+        ]);
 
-        return view('trainer.matches.index', compact('matches'));
+        $query = GameMatch::query();
+
+        if (!empty($filters['search'])) {
+            $search = $filters['search'];
+
+            $query->where(function ($q) use ($search) {
+                $q->where('match_name', 'like', "%{$search}%")
+                    ->orWhere('location', 'like', "%{$search}%");
+            });
+        }
+
+        if (!empty($filters['match_date'])) {
+            $query->whereDate('match_date', $filters['match_date']);
+        }
+
+        if (!empty($filters['location'])) {
+            $query->where('location', 'like', '%' . $filters['location'] . '%');
+        }
+
+        $sortBy = $filters['sort_by'] ?? 'match_date';
+        $sortDirection = $filters['sort_direction'] ?? 'desc';
+
+        $matches = $query
+            ->orderBy($sortBy, $sortDirection)
+            ->orderBy('id')
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('trainer.matches.index', compact('matches', 'filters'));
     }
 
     public function create()

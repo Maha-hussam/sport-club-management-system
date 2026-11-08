@@ -33,6 +33,67 @@
                 </a>
             </div>
 
+            <div class="filters-card">
+                <form method="GET" action="{{ route('trainer.matches.index') }}">
+                    <div class="filters-grid">
+
+                        <div class="filter-group search-group">
+                            <label for="search">Search Matches</label>
+                            <input type="text" id="search" name="search" value="{{ $filters['search'] ?? '' }}"
+                                placeholder="Search by match name or location...">
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="match_date">Match Date</label>
+                            <input type="date" id="match_date" name="match_date"
+                                value="{{ $filters['match_date'] ?? '' }}">
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="location">Location</label>
+                            <input type="text" id="location" name="location" value="{{ $filters['location'] ?? '' }}"
+                                placeholder="Filter by location...">
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="sort_by">Sort By</label>
+                            <select id="sort_by" name="sort_by">
+                                <option value="match_date" {{ ($filters['sort_by'] ?? 'match_date') === 'match_date' ? 'selected' : '' }}>
+                                    Match Date
+                                </option>
+
+                                <option value="match_name" {{ ($filters['sort_by'] ?? '') === 'match_name' ? 'selected' : '' }}>
+                                    Match Name
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="sort_direction">Sort Direction</label>
+                            <select id="sort_direction" name="sort_direction">
+                                <option value="desc" {{ ($filters['sort_direction'] ?? 'desc') === 'desc' ? 'selected' : '' }}>
+                                    Descending
+                                </option>
+
+                                <option value="asc" {{ ($filters['sort_direction'] ?? '') === 'asc' ? 'selected' : '' }}>
+                                    Ascending
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="filter-actions">
+                        <button type="submit" class="filter-button">
+                            Search & Filter
+                        </button>
+
+                        <a href="{{ route('trainer.matches.index') }}" class="clear-button">
+                            Clear Filters
+                        </a>
+                    </div>
+                </form>
+            </div>
+
             <div class="matches-card">
                 <div class="table-wrapper">
                     <table class="matches-table">
@@ -68,7 +129,6 @@
                                         {{ $match->location }}
                                     </td>
 
-
                                     <td>
                                         <div class="action-buttons">
                                             <a href="{{ route('trainer.matches.show', $match) }}" class="view-button">
@@ -90,19 +150,32 @@
                                             </form>
                                         </div>
                                     </td>
-
                                 </tr>
                             @empty
                                 <tr>
                                     <td colspan="5">
                                         <div class="empty-state">
                                             <div class="empty-icon">◎</div>
-                                            <h4>No matches yet</h4>
-                                            <p>Create your first match to organize club activities.</p>
 
-                                            <a href="{{ route('trainer.matches.create') }}" class="primary-button">
-                                                Add First Match
-                                            </a>
+                                            @if (
+                                                    !empty($filters['search']) ||
+                                                    !empty($filters['match_date']) ||
+                                                    !empty($filters['location'])
+                                                )
+                                                <h4>No matches found</h4>
+                                                <p>Try adjusting your search or filters.</p>
+
+                                                <a href="{{ route('trainer.matches.index') }}" class="primary-button">
+                                                    Clear Filters
+                                                </a>
+                                            @else
+                                                <h4>No matches yet</h4>
+                                                <p>Create your first match to organize club activities.</p>
+
+                                                <a href="{{ route('trainer.matches.create') }}" class="primary-button">
+                                                    Add First Match
+                                                </a>
+                                            @endif
                                         </div>
                                     </td>
                                 </tr>
@@ -110,12 +183,49 @@
                         </tbody>
                     </table>
                 </div>
-
-                @if ($matches->hasPages())
-                    <div class="pagination-wrapper">
-                        {{ $matches->links() }}
+                <div class="pagination-wrapper">
+                    <div class="pagination-info">
+                        <div class="pagination-count">
+                            Showing
+                            <strong>{{ $matches->firstItem() ?? 0 }}–{{ $matches->lastItem() ?? 0 }}</strong>
+                            of
+                            <strong>{{ $matches->total() }}</strong>
+                            matches
+                        </div>
+                        <div class="pagination-page">
+                            Page {{ $matches->currentPage() }}
+                            of {{ $matches->lastPage() }}
+                        </div>
                     </div>
-                @endif
+                    <div class="pagination-links">
+                        @if ($matches->hasPages())
+                            @if ($matches->onFirstPage())
+                                <span class="page-btn disabled">‹</span>
+                            @else
+                                <a href="{{ $matches->previousPageUrl() }}" class="page-btn">
+                                    ‹
+                                </a>
+                            @endif
+
+                            @foreach ($matches->getUrlRange(1, $matches->lastPage()) as $page => $url)
+                                @if ($page == $matches->currentPage())
+                                    <span class="page-btn active">{{ $page }}</span>
+                                @else
+                                    <a href="{{ $url }}" class="page-btn">{{ $page }}</a>
+                                @endif
+                            @endforeach
+
+                            @if ($matches->hasMorePages())
+                                <a href="{{ $matches->nextPageUrl() }}" class="page-btn">
+                                    ›
+                                </a>
+                            @else
+                                <span class="page-btn disabled">›</span>
+                            @endif
+
+                        @endif
+                    </div>
+                </div>
             </div>
 
             <p class="page-footer">
@@ -370,20 +480,201 @@
             font-size: 14px;
         }
 
-        .pagination-wrapper {
-            padding: 18px 20px;
-            border-top: 1px solid var(--border);
+        .pagination-links nav>div:first-child {
+            display: none !important;
         }
 
-        .pagination-wrapper nav {
+        .filters-card {
+            margin-bottom: 22px;
+            padding: 22px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: var(--card);
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .filter-group {
             display: flex;
-            justify-content: space-between;
-            gap: 12px;
+            flex-direction: column;
+            gap: 8px;
         }
 
-        .pagination-wrapper a,
-        .pagination-wrapper span {
+        .filter-group label {
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .filter-group input,
+        .filter-group select {
+            width: 100%;
+            min-height: 42px;
+            padding: 9px 11px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: #202920;
             color: var(--text);
+            font-size: 13px;
+            color-scheme: dark;
+        }
+
+        .filter-group input:focus,
+        .filter-group select:focus {
+            outline: 2px solid var(--lime);
+            outline-offset: 2px;
+        }
+
+        .filter-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .filter-button,
+        .clear-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 40px;
+            padding: 9px 17px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .filter-button {
+            border: 1px solid var(--lime);
+            background: var(--lime);
+            color: var(--dark);
+        }
+
+        .filter-button:hover {
+            background: #c8ff69;
+        }
+
+        .clear-button {
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text);
+        }
+
+        .clear-button:hover {
+            border-color: var(--lime);
+            color: var(--lime);
+        }
+
+        @media (max-width: 768px) {
+            .filters-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 480px) {
+            .filters-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-actions {
+                align-items: stretch;
+                flex-direction: column;
+            }
+        }
+
+        .pagination-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 20px 24px;
+            border-top: 1px solid var(--border);
+            background: var(--card);
+        }
+
+        .pagination-info {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .pagination-count {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .pagination-count strong {
+            color: var(--text);
+            font-weight: 700;
+        }
+
+        .pagination-page {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .pagination-links {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .page-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 36px;
+            height: 36px;
+            padding: 0 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--card);
+            color: var(--text);
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .page-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: var(--hover);
+        }
+
+        .page-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #fff;
+        }
+
+        .page-btn.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        @media (max-width: 600px) {
+            .pagination-wrapper {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 16px;
+                padding: 18px;
+            }
+
+            .pagination-info {
+                width: 100%;
+            }
+
+            .pagination-links {
+                width: 100%;
+                overflow-x: auto;
+            }
         }
 
         .page-footer {
