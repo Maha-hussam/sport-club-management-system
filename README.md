@@ -362,6 +362,62 @@ Displays the match information and its assigned players. Trainers can assign add
 
 Player assignment should use the many-to-many Eloquent relationship so that assignments can be managed without manually manipulating pivot-table records throughout the application.
 
+## Search, Filtering, Sorting & Pagination
+
+The Sport Club Management System provides search, filtering, sorting, and pagination functionality for Player and Match Management to make browsing and managing records easier and more efficient.
+
+# Player Search
+* Search players by first name.
+* Search players by last name.
+* Search players by email address.
+* Support partial text matching.
+
+# Match Search
+* Search matches by match name.
+* Search matches by location.
+* Support partial text matching.
+
+# Filtering
+
+# Players:
+* Filter players by registration date.
+* Filter players by the number of assigned matches.
+
+# Matches:
+* Filter matches by match date.
+* Filter matches by location.
+
+# Sorting
+
+# Players:
+* Sort by first name.
+* Sort by registration date.
+* Support ascending and descending order.
+
+# Matches:
+* Sort by match name.
+* Sort by match date.
+* Support ascending and descending order.
+
+# Pagination
+* Implement pagination for the Players List and Matches List.
+* Display the current page.
+* Display the total number of pages.
+* Display the total number of records.
+* Preserve search, filtering, and sorting parameters when navigating between pages.
+
+# User Experience
+* Display a message when no matching records are found.
+* Provide a Clear Filters option.
+* Preserve search and filter values after form submission.
+
+# Performance and Optimization
+* Use Laravel Eloquent and Query Builder for dynamic database queries.
+* Apply efficient query filtering and sorting.
+* Use eager loading where appropriate.
+* Keep query logic organized and maintainable.
+* Preserve existing authorization rules and access control.
+
 ## Useful Commands
 
 Start the application:
@@ -464,6 +520,28 @@ Player Profile Image on Dashboard
 
 Player Profile Image in Trainer's Player Management List
 
+6. Search, Filtering, Sorting & Pagination
+
+Player Search
+
+Match Search
+
+Player Filtering
+
+Match Filtering
+
+Player Sorting
+
+Match Sorting
+
+Players Pagination
+
+Matches Pagination
+
+Empty Search Results
+
+Clear Filters
+
 ## Project Status
 
 # Phase 1 — Sport Club Management System
@@ -484,6 +562,18 @@ Players can access their dashboard, view their read-only profile, browse their a
 
 # Player Profile Images — Implemented
 Players can upload, replace, and remove their profile pictures. The application validates image formats and file size, displays profile images across the relevant pages, and automatically deletes old images when replaced or when a player account is deleted.
+
+# Search, Filtering, Sorting & Pagination — Implemented
+
+Implemented search, filtering, sorting, and pagination for Player and Match Management.
+
+Trainers can search players by first name, last name, and email, and search matches by name and location. They can also filter records by registration date, assigned match count, match date, and location.
+
+Both Players and Matches lists support sorting in ascending and descending order, along with pagination that preserves the selected search, filter, and sorting parameters.
+
+The implementation also includes empty-state messages, a Clear Filters option, and preserved form values to improve the user experience.
+
+All existing authorization rules remain enforced.
 
 # Sport Club REST API
 
