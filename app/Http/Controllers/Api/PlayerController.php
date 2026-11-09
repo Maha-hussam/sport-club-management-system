@@ -44,7 +44,13 @@ class PlayerController extends Controller
     ): PlayerResource {
         $player = User::where('role', 'player')->findOrFail($id);
 
-        $player->update($request->validated());
+        $data = $request->validated();
+
+        if (empty($data['password'])) {
+            unset($data['password']);
+        }
+
+        $player->update($data);
 
         return new PlayerResource($player->fresh());
     }

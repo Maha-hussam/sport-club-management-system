@@ -6,9 +6,9 @@ use App\Models\GameMatch;
 use App\Models\User;
 use App\Http\Requests\StoreMatchRequest;
 use App\Http\Requests\UpdateMatchRequest;
-use App\Http\Requests\AssignPlayersRequest;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use App\Http\Requests\UpdateMatchPlayersRequest;
 class MatchController extends Controller
 {
     public function index(Request $request): View
@@ -21,24 +21,10 @@ class MatchController extends Controller
             'sort_direction' => ['nullable', 'in:asc,desc'],
         ]);
 
-        $query = GameMatch::query();
-
-        if (!empty($filters['search'])) {
-            $search = $filters['search'];
-
-            $query->where(function ($q) use ($search) {
-                $q->where('match_name', 'like', "%{$search}%")
-                    ->orWhere('location', 'like', "%{$search}%");
-            });
-        }
-
-        if (!empty($filters['match_date'])) {
-            $query->whereDate('match_date', $filters['match_date']);
-        }
-
-        if (!empty($filters['location'])) {
-            $query->where('location', 'like', '%' . $filters['location'] . '%');
-        }
+        $query = GameMatch::query()
+            ->search($filters['search'] ?? null)
+            ->onDate($filters['match_date'] ?? null)
+            ->atLocation($filters['location'] ?? null);
 
         $sortBy = $filters['sort_by'] ?? 'match_date';
         $sortDirection = $filters['sort_direction'] ?? 'desc';
@@ -81,7 +67,7 @@ class MatchController extends Controller
         ]);
     }
     public function updatePlayers(
-        AssignPlayersRequest $request,
+        UpdateMatchPlayersRequest $request,
         GameMatch $gameMatch
     ) {
         $validated = $request->validated();

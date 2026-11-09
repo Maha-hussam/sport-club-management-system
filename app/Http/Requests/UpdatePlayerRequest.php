@@ -20,6 +20,10 @@ class UpdatePlayerRequest extends FormRequest
                 'email' => strtolower($this->input('email')),
             ]);
         }
+
+        if (blank($this->input('password'))) {
+            $this->getInputSource()->remove('password');
+        }
     }
 
     public function rules(): array

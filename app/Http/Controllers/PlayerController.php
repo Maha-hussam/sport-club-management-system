@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 
 class PlayerController extends Controller
 {
+
     public function index(Request $request): View
     {
         $filters = $request->validate([
@@ -27,29 +28,17 @@ class PlayerController extends Controller
         ]);
 
         $query = User::where('role', 'player')
-            ->withCount('matches');
-
-        if (!empty($filters['search'])) {
-            $search = $filters['search'];
-
-            $query->where(function ($q) use ($search) {
-                $q->where('first_name', 'like', "%{$search}%")
-                    ->orWhere('last_name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%");
-            });
-        }
-
-        if (!empty($filters['registered_from'])) {
-            $query->whereDate('created_at', '>=', $filters['registered_from']);
-        }
-
-        if (!empty($filters['registered_to'])) {
-            $query->whereDate('created_at', '<=', $filters['registered_to']);
-        }
-
-        if (isset($filters['matches_count'])) {
-            $query->has('matches', '=', (int) $filters['matches_count']);
-        }
+            ->withCount('matches')
+            ->search($filters['search'] ?? null)
+            ->registeredBetween(
+                $filters['registered_from'] ?? null,
+                $filters['registered_to'] ?? null
+            )
+            ->hasMatchesCount(
+                isset($filters['matches_count'])
+                ? (int) $filters['matches_count']
+                : null
+            );
 
         $sortBy = $filters['sort_by'] ?? 'created_at';
         $sortDirection = $filters['sort_direction'] ?? 'desc';
