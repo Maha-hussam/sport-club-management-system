@@ -3,6 +3,7 @@
 use App\Models\User;
 use App\Models\GameMatch;
 use Laravel\Sanctum\Sanctum;
+use Illuminate\Support\Facades\Hash;
 
 test('unauthenticated users cannot access the API matches', function () {
     $this->getJson('/api/matches')
@@ -158,7 +159,6 @@ test('trainer can view match details through the API', function () {
         ->assertOk();
 });
 
-
 test('API login is rate limited after five attempts', function () {
     $credentials = [
         'email' => 'nonexistent@example.com',
@@ -173,7 +173,6 @@ test('API login is rate limited after five attempts', function () {
     $this->postJson('/api/login', $credentials)
         ->assertStatus(429);
 });
-
 
 test('trainer can update a player using the same email through the API', function () {
     $trainer = User::factory()->trainer()->create();
@@ -193,4 +192,120 @@ test('trainer can update a player using the same email through the API', functio
 
     expect($player->fresh()->first_name)->toBe('Updated')
         ->and($player->fresh()->email)->toBe($originalEmail);
+});
+
+test('trainer can remove all players from a match', function () {
+    $trainer = User::factory()->trainer()->create();
+    $player = User::factory()->player()->create();
+
+    $match = GameMatch::create([
+        'match_name' => 'Friendly Match',
+        'match_date' => '2026-11-10',
+        'match_time' => '15:30',
+        'location' => 'Main Stadium',
+        'description' => null,
+    ]);
+
+    $match->players()->attach($player->id);
+
+    $response = $this->actingAs($trainer)->put(
+        route('trainer.matches.players.update', $match),
+        []
+    );
+
+    $response->assertRedirect(route('trainer.matches.show', $match));
+
+    $this->assertDatabaseMissing('match_player', [
+        'match_id' => $match->id,
+        'player_id' => $player->id,
+    ]);
+});
+
+test('API rejects players field when assigning match players', function () {
+    $trainer = User::factory()->trainer()->create();
+    $player = User::factory()->player()->create();
+
+    $match = GameMatch::create([
+        'match_name' => 'API Match',
+        'match_date' => '2026-11-10',
+        'match_time' => '15:30',
+        'location' => 'Main Stadium',
+        'description' => null,
+    ]);
+
+    $match->players()->attach($player->id);
+
+    Sanctum::actingAs($trainer);
+
+    $this->putJson("/api/matches/{$match->id}/players", [
+        'players' => [],
+    ])->assertUnprocessable();
+
+    $this->assertDatabaseHas('match_player', [
+        'match_id' => $match->id,
+        'player_id' => $player->id,
+    ]);
+});
+
+test('API rejects empty request when assigning match players', function () {
+    $trainer = User::factory()->trainer()->create();
+
+    $match = GameMatch::create([
+        'match_name' => 'API Match',
+        'match_date' => '2026-11-10',
+        'match_time' => '15:30',
+        'location' => 'Main Stadium',
+        'description' => null,
+    ]);
+
+    Sanctum::actingAs($trainer);
+
+    $this->putJson("/api/matches/{$match->id}/players", [])
+        ->assertUnprocessable();
+});
+
+test('API keeps the existing password when password is null', function () {
+    $trainer = User::factory()->trainer()->create();
+    $player = User::factory()->player()->create();
+
+    $originalPassword = $player->password;
+
+    Sanctum::actingAs($trainer);
+
+    $this->putJson("/api/players/{$player->id}", [
+        'password' => null,
+    ])->assertOk();
+
+    expect($player->fresh()->password)->toBe($originalPassword);
+});
+
+test('API keeps the existing password when password is empty', function () {
+    $trainer = User::factory()->trainer()->create();
+    $player = User::factory()->player()->create();
+
+    $originalPassword = $player->password;
+
+    Sanctum::actingAs($trainer);
+
+    $this->putJson("/api/players/{$player->id}", [
+        'password' => '',
+    ])->assertOk();
+
+    expect($player->fresh()->password)->toBe($originalPassword);
+});
+
+test('API updates password when a new password is provided', function () {
+    $trainer = User::factory()->trainer()->create();
+    $player = User::factory()->player()->create();
+
+    Sanctum::actingAs($trainer);
+
+    $this->putJson("/api/players/{$player->id}", [
+        'password' => 'NewPassword123!',
+        'password_confirmation' => 'NewPassword123!',
+    ])->assertOk();
+
+    expect(
+        Hash::check('NewPassword123!', $player->fresh()->password)
+    )->toBeTrue();
 });

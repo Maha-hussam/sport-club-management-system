@@ -14,13 +14,10 @@ class AssignPlayersRequest extends FormRequest
 
     public function rules(): array
     {
-        // Keep the original field name for each endpoint.
-        $field = $this->has('players') ? 'players' : 'player_ids';
-
         return [
-            $field => ['sometimes', 'array'],
+            'player_ids' => ['present', 'array'],
 
-            "{$field}.*" => [
+            'player_ids.*' => [
                 'required',
                 'integer',
                 'distinct',
