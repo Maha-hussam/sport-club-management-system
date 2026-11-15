@@ -72,6 +72,14 @@ Match management uses a dedicated matches table and a pivot table to associate m
 * Delete the previous image when a player uploads a replacement.
 * Automatically delete the profile image when the player account is deleted.
 
+# Events, Listeners & Notifications
+
+* Use Laravel Events and Listeners to decouple application logic.
+* Dispatch events when players register, players are assigned to matches, and matches are created.
+* Use dedicated Action classes to handle application operations.
+* Log important application events using Laravel's logging system.
+* Send database notifications to players when they are assigned to matches.
+
 ## Technologies Used
 
 * PHP
@@ -418,6 +426,83 @@ The Sport Club Management System provides search, filtering, sorting, and pagina
 * Keep query logic organized and maintainable.
 * Preserve existing authorization rules and access control.
 
+## Events, Listeners & Notifications
+
+The Sport Club Management System uses Laravel Events and Listeners to decouple application actions from their related business logic.
+
+Events represent important actions that occur in the application, while Listeners handle the tasks that should happen in response to those events.
+
+### 1. Player Registration Event
+
+**Event:** `PlayerRegistered`
+
+**Listener:** `LogPlayerRegistration`
+
+**Action:** `RegisterUser`
+
+- Dispatched when a new player successfully registers.
+- The event is dispatched for Player registrations only, not Trainer registrations.
+- The listener logs the player's ID, full name, and email address in `laravel.log`.
+
+### 2. Player Assignment Event
+
+**Event:** `PlayerAssignedToMatch`
+
+**Listener:** `LogPlayerMatchAssignment`
+
+**Action:** `AssignPlayerToMatch`
+
+- Dispatched when a trainer assigns a new player to a match.
+- The event contains the assigned Player and the Match.
+- The listener logs the player's name, email, and match name in `laravel.log`.
+- The event is dispatched only for newly assigned players. Existing assignments do not trigger the event again.
+
+### 3. Match Creation Event
+
+**Event:** `MatchCreated`
+
+**Listener:** `LogMatchCreation`
+
+**Action:** `CreateMatch`
+
+- Dispatched when a trainer successfully creates a new match.
+- The event contains the newly created Match.
+- The listener logs the match name, date, and location in `laravel.log`.
+
+### 4. Database Notifications
+
+The application uses Laravel's database notification channel to notify players when they are assigned to a match.
+
+**Notification:** `PlayerAssignedToMatchNotification`
+
+When a player is assigned to a match:
+
+- A database notification is sent to the assigned player.
+- The notification includes:
+  - Match name (`match_name`).
+  - Match date (`match_date`).
+  - Match location (`location`).
+
+Notifications are stored in the `notifications` database table.
+
+### 5. Event Registration
+
+Events and Listeners use Laravel's automatic Event Discovery mechanism.
+
+Events are dispatched from dedicated Action classes, keeping controllers focused on handling HTTP requests and responses.
+
+### 6. Testing
+
+Feature tests verify:
+
+- Player registration event dispatching.
+- Prevention of player registration events for Trainer accounts.
+- Player assignment event dispatching.
+- Prevention of duplicate assignment events.
+- Match creation event dispatching.
+- Listener execution and logging.
+- Database notification delivery and notification data.
+
 ## Useful Commands
 
 Start the application:
@@ -574,6 +659,14 @@ Both Players and Matches lists support sorting in ascending and descending order
 The implementation also includes empty-state messages, a Clear Filters option, and preserved form values to improve the user experience.
 
 All existing authorization rules remain enforced.
+
+# Events, Listeners & Notifications — Implemented
+
+Implemented Laravel Events and Listeners for player registration, player assignment to matches, and match creation.
+
+Dedicated Action classes handle the corresponding application operations, while Listeners log important event details.
+
+Database notifications are sent to players when they are assigned to matches, including the match name, date, and location.
 
 # Sport Club REST API
 

@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Notifications\Notifiable;
 
 #[Fillable([
     'first_name',
@@ -22,7 +23,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory;
+    use HasApiTokens, HasFactory, Notifiable;
 
     protected function casts(): array
     {

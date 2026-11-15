@@ -9,6 +9,8 @@ use App\Http\Requests\UpdateMatchRequest;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use App\Http\Requests\UpdateMatchPlayersRequest;
+use App\Actions\AssignPlayerToMatch;
+use App\Actions\CreateMatch;
 class MatchController extends Controller
 {
     public function index(Request $request): View
@@ -43,10 +45,13 @@ class MatchController extends Controller
         return view('trainer.matches.create');
     }
 
-    public function store(StoreMatchRequest $request)
-    {
+    public function store(
+        StoreMatchRequest $request,
+        CreateMatch $createMatch
+    ) {
         $validated = $request->validated();
-        GameMatch::create($validated);
+
+        $createMatch->handle($validated);
 
         return redirect()
             ->route('trainer.matches.index')
@@ -66,19 +71,23 @@ class MatchController extends Controller
             'players' => $players,
         ]);
     }
+
     public function updatePlayers(
         UpdateMatchPlayersRequest $request,
-        GameMatch $gameMatch
+        GameMatch $gameMatch,
+        AssignPlayerToMatch $assignPlayerToMatch
     ) {
         $validated = $request->validated();
 
         $playerIds = $validated['players'] ?? [];
-        $gameMatch->players()->sync($playerIds);
+
+        $assignPlayerToMatch->handle($gameMatch, $playerIds);
 
         return redirect()
             ->route('trainer.matches.show', $gameMatch)
             ->with('success', 'Player assignments updated successfully.');
     }
+
 
     public function edit(GameMatch $gameMatch)
     {
