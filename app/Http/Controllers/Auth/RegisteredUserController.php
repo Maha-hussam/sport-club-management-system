@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
+use App\Actions\RegisterUser;
 
 class RegisteredUserController extends Controller
 {
@@ -17,12 +18,13 @@ class RegisteredUserController extends Controller
         return view('auth.register');
     }
 
-    public function store(Request $request): RedirectResponse
-    {
+    public function store(
+        Request $request,
+        RegisterUser $registerUser
+    ): RedirectResponse {
         $request->merge([
             'email' => strtolower($request->input('email', '')),
         ]);
-
         $request->validate([
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
@@ -48,7 +50,7 @@ class RegisteredUserController extends Controller
             ],
         ]);
 
-        $user = User::create([
+        $user = $registerUser->handle([
             'first_name' => $request->first_name,
             'last_name' => $request->last_name,
             'email' => $request->email,
