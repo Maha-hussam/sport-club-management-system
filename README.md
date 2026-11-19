@@ -7,15 +7,23 @@ The Sport Club Management System is a Laravel web application that manages sport
 The application supports two user roles: Trainer and Player. Trainers can manage player accounts, create and manage matches, and assign players to matches. Players can access their own dashboard, view their personal information, and browse matches assigned to them.
 
 ### Features
-# Authentication and Authorization
-* Homepage with club information and navigation.
-* User registration, login , and logout.
-* Two user roles: Trainer and Player.
-* Role-based redirection after login.
-* Middleware-based access control.
-* Server-side validation.
-* Secure password hashing using Laravel.
-* MySQL database managed with Docker.
+## Authentication and Authorization
+
+- Homepage with club information and navigation.
+- User registration, login, and logout.
+- Two user roles: Trainer and Player.
+- Role-based redirection after login.
+- Middleware-based access control.
+- Server-side validation.
+- Secure password hashing using Laravel.
+- MySQL database managed with Docker.
+
+### API Authentication and Authorization
+
+- All player and match management API endpoints require authentication using Laravel Sanctum.
+- All player and match management API endpoints are restricted to authenticated Trainers.
+- Player accounts cannot access Trainer-only API endpoints.
+- API login attempts are limited to 5 attempts per minute.
 
 # Player Management
 * View the list of registered players.
@@ -547,85 +555,242 @@ Build frontend assets:
 docker compose exec laravel.test npm run build
 ```
 
+## Testing
+
+The Sport Club Management System uses **Pest and PHPUnit** to test application functionality, authorization, validation, database operations, and API endpoints.
+
+### Testing Environment
+
+The project uses a separate MySQL database for automated tests to keep test data isolated from the development database.
+
+The testing environment is configured through `phpunit.xml` and `.env.testing`.
+
+| Setting | Value |
+|---|---|
+| Testing Framework | Pest / PHPUnit |
+| Test Suites | Unit and Feature |
+| Application Environment | testing |
+| Database Connection | MySQL |
+| Testing Database | `testing` |
+| Development Database | `sport_club` |
+
+The `.env.testing` file contains the testing database configuration. Make sure the `testing` database exists and that its connection credentials match the MySQL service in Docker Compose.
+
+Do not commit `.env.testing` or environment secrets to version control.
+
+### Test Organization
+
+Tests are organized into two directories:
+
+- `tests/Feature` — tests application features, HTTP routes, authentication, authorization, validation, database operations, and API functionality.
+- `tests/Unit` — tests individual units of application logic.
+
+### Test Data and Database Management
+
+Laravel model factories are used to generate test users, trainers, players, and matches.
+
+Tests use generated data instead of depending on real development records.
+
+The testing database is separate from the development database. Never use the development database for automated tests.
+
+Feature tests use Laravel's RefreshDatabase trait to reset the database state and isolate changes between tests.
+
+### Running Tests
+
+Start the Docker services:
+
+```bash
+docker compose up -d
+```
+
+Run the complete test suite:
+
+```bash
+docker compose exec laravel.test php artisan test
+```
+
+Run Feature tests only:
+
+```bash
+docker compose exec laravel.test php artisan test --testsuite=Feature
+```
+
+Run Unit tests only:
+
+```bash
+docker compose exec laravel.test php artisan test --testsuite=Unit
+```
+
+Run a specific test file:
+
+```bash
+docker compose exec laravel.test php artisan test tests/Feature/ApiTest.php
+```
+
+Run tests matching a specific test name:
+
+```bash
+docker compose exec laravel.test php artisan test --filter="PlayerManagementTest"
+```
+
+### Code Coverage
+
+Generate a code coverage report:
+
+```bash
+docker compose exec laravel.test php artisan test --coverage
+```
+
+Code coverage reports show which parts of the application are executed by the automated tests.
+
+### Current Test Results
+
+The latest complete test run reported:
+
+- **140 tests passed**
+- **331 assertions**
+- **96.0% total code coverage**
+
+All tests passed successfully in the latest recorded full test run.
+
+### Testing Best Practices
+
+- Run automated tests after making application changes.
+- Use factories to generate test records.
+- Keep testing data separate from development data.
+- Test both successful requests and invalid or unauthorized requests.
+- Verify database changes and expected application responses.
+- Avoid using real user accounts or production data in automated tests.
+
 ## Screenshots
 
 The following screenshots demonstrate the main pages and role-based dashboards of the Sport Club Management System.
 
-1. Homepage and Authentication
+### 1. Homepage and Authentication
 
-Homepage
+**Homepage**
 
-Registration Page
+![Homepage Part 1](screenshots/homepage-part-1.png)
 
-Login Page
+![Homepage Part 2](screenshots/homepage-part-2.png)
 
-2. Role-Based Dashboards
+**Registration Page**
 
-Trainer Dashboard
+![Registration Page](screenshots/registration-page.png)
 
-Player Dashboard
+**Login Page**
 
-3. Player Management
+![Login Page](screenshots/login.png)
 
-Players List
+### 2. Role-Based Dashboards
 
-Add Player
+**Trainer Dashboard**
 
-Edit Player
+![Trainer Dashboard](screenshots/trainer-dashboard.png)
 
-Player Updated Successfully
+**Player Dashboard**
 
-Player Deleted Successfully
+![Player Dashboard](screenshots/player-dashboard.png)
 
-4. Match Management
+### 3. Player Management
 
-Matches List
+**Players List**
 
-Create Match
+![Players List](screenshots/players-list.png)
 
-Edit Match
+**Add Player**
 
-Match Details and Player Assignment
+![Add Player](screenshots/add-player.png)
 
-Match Created Successfully
+**Edit Player**
 
-Player Assignment
+![Edit Player](screenshots/edit-player.png)
 
-5. Player Profile Images
+**Player Updated Successfully**
 
-Player Profile Image Upload
+![Player Updated](screenshots/player-updated.png)
 
-Player Profile Image Replacement
+**Player Deleted Successfully**
 
-Player Profile Image Removal
+![Player Deleted](screenshots/player-deleted.png)
 
-Default Player Avatar
+### 4. Match Management
 
-Player Profile Image on Dashboard
+**Matches List**
 
-Player Profile Image in Trainer's Player Management List
+![Matches List](screenshots/Matches-List.png)
 
-6. Search, Filtering, Sorting & Pagination
+**Create Match**
 
-Player Search
+![Create Match](screenshots/create-match.png)
 
-Match Search
+**Edit Match**
 
-Player Filtering
+![Edit Match](screenshots/edit-match.png)
 
-Match Filtering
+**Match Details**
 
-Player Sorting
+![Trainer Match Details](screenshots/trainer-match-details.png)
 
-Match Sorting
+**Match Created Successfully**
 
-Players Pagination
+![Match Created Successfully](screenshots/match-created-successfully.png)
 
-Matches Pagination
+**Player Assignment**
 
-Empty Search Results
+![Player Assignment](screenshots/player-assignment.png)
 
-Clear Filters
+### 5. Player Profile Images
+
+**Profile Image Upload**
+
+![Profile Image Upload](screenshots/profile-image-upload.png)
+
+**Profile Image Replacement**
+
+![Profile Image Replacement](screenshots/profile-image-replacement.png)
+
+**Profile Image Removal**
+
+![Profile Image Removal](screenshots/profile-image-removal.png)
+
+**Default Player Avatar**
+
+![Default Player Avatar](screenshots/default-player-avatar.png)
+
+**Player Profile**
+
+![Player Profile](screenshots/my-profile.png)
+
+### 6. Search, Filtering, Sorting and Pagination
+
+**Player Search**
+
+![Player Search](screenshots/Player_Search.png)
+
+**Match Search**
+
+![Match Search](screenshots/Match_Search.png)
+
+**Player Filtering and Sorting**
+
+![Player Filtering and Sorting](screenshots/Player_Filtering_Sorting.png)
+
+**Match Filtering and Sorting**
+
+![Match Filtering and Sorting](screenshots/Match_Filtering_Sorting.png)
+
+**Players Pagination**
+
+![Players Pagination](screenshots/Player_Pagination.png)
+
+**Matches Pagination**
+
+![Matches Pagination](screenshots/Match_Pagination.png)
+
+**Empty Results and Clear Filters**
+
+![Empty Results and Clear Filters](screenshots/Empty_Results_Clear_Filters.png)
 
 ## Project Status
 
@@ -731,8 +896,8 @@ All player endpoints require authentication. Only Trainers can create, update, o
 
 | Method | Endpoint | Description | Permission |
 |---|---|---|---|
-| GET | `/api/players` | List players | Authenticated users |
-| GET | `/api/players/{id}` | Get player details | Authenticated users |
+| GET | `/api/players` | List players | Trainer only |
+| GET | `/api/players/{id}` | Get player details | Trainer only |
 | POST | `/api/players` | Create a player | Trainer only |
 | PUT | `/api/players/{id}` | Update a player | Trainer only |
 | PATCH | `/api/players/{id}` | Partially update a player | Trainer only |
@@ -760,8 +925,8 @@ All match endpoints require authentication. Only Trainers can create, update, or
 
 | Method | Endpoint | Description | Permission |
 |---|---|---|---|
-| GET | `/api/matches` | List matches | Authenticated users |
-| GET | `/api/matches/{id}` | Get match details | Authenticated users |
+| GET | `/api/matches` | List matches | Trainer only |
+| GET | `/api/matches/{id}` | Get match details | Trainer only |
 | POST | `/api/matches` | Create a match | Trainer only |
 | PUT | `/api/matches/{id}` | Update a match | Trainer only |
 | PATCH | `/api/matches/{id}` | Partially update a match | Trainer only |

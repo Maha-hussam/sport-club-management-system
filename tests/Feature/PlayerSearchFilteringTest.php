@@ -228,3 +228,29 @@ it('paginates more than ten players and preserves all query options', function (
                 && str_contains($players->url(3), 'sort_direction=asc');
         });
 });
+
+it('treats SQL LIKE special characters as literal search text', function (string $search, string $matchingName, string $nonMatchingName) {
+    $matchingPlayer = User::factory()->player()->create([
+        'first_name' => $matchingName,
+    ]);
+
+    $nonMatchingPlayer = User::factory()->player()->create([
+        'first_name' => $nonMatchingName,
+    ]);
+
+    $response = $this->actingAs($this->trainer)
+        ->get(route('trainer.players.index', [
+            'search' => $search,
+        ]));
+
+    $response->assertOk()
+        ->assertViewHas('players', function ($players) use ($matchingPlayer, $nonMatchingPlayer) {
+            return $players->contains('id', $matchingPlayer->id)
+                && !$players->contains('id', $nonMatchingPlayer->id)
+                && $players->count() === 1;
+        });
+})->with([
+            'percent sign' => ['%', 'Alex%Stone', 'AlexXStone'],
+            'underscore' => ['_', 'Alex_Stone', 'AlexXStone'],
+            'exclamation mark' => ['!', 'Alex!Stone', 'AlexStone'],
+        ]);

@@ -169,3 +169,55 @@ it('returns an empty result when no matches match the search', function () {
             return $matches->isEmpty() && $matches->total() === 0;
         });
 });
+
+it('treats SQL LIKE special characters as literal search text', function (string $search, string $matchingValue, string $nonMatchingValue) {
+    $matchingMatch = GameMatch::factory()->create([
+        'match_name' => $matchingValue,
+    ]);
+
+    $nonMatchingMatch = GameMatch::factory()->create([
+        'match_name' => $nonMatchingValue,
+    ]);
+
+    $response = $this->actingAs($this->trainer)
+        ->get(route('trainer.matches.index', [
+            'search' => $search,
+        ]));
+
+    $response->assertOk()
+        ->assertViewHas('matches', function ($matches) use ($matchingMatch, $nonMatchingMatch) {
+            return $matches->contains('id', $matchingMatch->id)
+                && !$matches->contains('id', $nonMatchingMatch->id)
+                && $matches->count() === 1;
+        });
+})->with([
+            'percent sign' => ['%', 'Championship%Final', 'ChampionshipXFinal'],
+            'underscore' => ['_', 'Championship_Final', 'ChampionshipXFinal'],
+            'exclamation mark' => ['!', 'Championship!Final', 'ChampionshipFinal'],
+        ]);
+
+it('treats SQL LIKE special characters literally when filtering by location', function (string $search, string $matchingLocation, string $nonMatchingLocation) {
+    $matchingMatch = GameMatch::factory()->create([
+        'location' => $matchingLocation,
+    ]);
+
+    $nonMatchingMatch = GameMatch::factory()->create([
+        'location' => $nonMatchingLocation,
+    ]);
+
+    $response = $this->actingAs($this->trainer)
+        ->get(route('trainer.matches.index', [
+            'location' => $search,
+        ]));
+
+    $response->assertOk()
+        ->assertViewHas('matches', function ($matches) use ($matchingMatch, $nonMatchingMatch) {
+            return $matches->contains('id', $matchingMatch->id)
+                && !$matches->contains('id', $nonMatchingMatch->id)
+                && $matches->count() === 1;
+        });
+})->with([
+            'percent sign' => ['%', 'Central%Ground', 'CentralXGround'],
+            'underscore' => ['_', 'Central_Ground', 'CentralXGround'],
+            'exclamation mark' => ['!', 'Central!Ground', 'CentralGround'],
+        ]);

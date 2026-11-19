@@ -65,7 +65,6 @@ class GameMatch extends Model
             [$pattern]
         );
     }
-
     private static function escapeLike(string $value): string
     {
         return str_replace(
